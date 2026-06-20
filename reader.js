@@ -13,7 +13,8 @@ const SUPABASE_URL = "https://laihhrkxnxzohaiiisou.supabase.co";
 // ❌ Do NOT use sb_secret_
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_qW4msFbGQ9QuqIZ6-G8QfA_JY_pvcsY";
 
-const BOOK_CODE = "T4-NF-01";
+const params = new URLSearchParams(window.location.search);
+const BOOK_CODE = params.get("book") || "T4-NF-01";
 const ASSET_BASE_URL = `${SUPABASE_URL}/storage/v1/object/public/book-assets/`;
 
 let book = null;
