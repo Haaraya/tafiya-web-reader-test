@@ -1,0 +1,125 @@
+{
+  "book_code": "T4-NF-01",
+  "title": "How We Cook Jollof Rice",
+  "strand": "Tafiya",
+  "level": "Level 4",
+  "tafiya_name": "Tafiya",
+  "type": "Nonfiction",
+  "theme": "",
+  "cover": {
+    "image": "books/T4-NF-01/images/T4-NF-01_FC.png",
+    "layout": "cover_standard",
+    "logo_mode": "locked_brand_zones"
+  },
+  "pages": [
+    {
+      "page": 1,
+      "image": "books/T4-NF-01/images/T4-NF-01_P1.png",
+      "text": "Jollof rice is one of Nigeria's most loved foods. It is cooked at celebrations and eaten every day in many homes.",
+      "layout": "image_top_text_bottom",
+      "text_band": "medium",
+      "word_count": 21
+    },
+    {
+      "page": 2,
+      "image": "books/T4-NF-01/images/T4-NF-01_P2.png",
+      "text": "To make jollof, you need rice, tomatoes, peppers, onions, palm oil, and seasoning. These are the things that go into a good pot of jollof.",
+      "layout": "image_top_text_bottom",
+      "text_band": "medium",
+      "word_count": 25
+    },
+    {
+      "page": 3,
+      "image": "books/T4-NF-01/images/T4-NF-01_P3.png",
+      "text": "First, blend the tomatoes, peppers, and onions together until they are smooth. This is the tomato base.",
+      "layout": "image_top_text_bottom",
+      "text_band": "short",
+      "word_count": 17
+    },
+    {
+      "page": 4,
+      "image": "books/T4-NF-01/images/T4-NF-01_P4.png",
+      "text": "Next, heat the palm oil in a big pot. Add the tomato base and fry it, stirring, until the raw smell is gone.",
+      "layout": "image_top_text_bottom",
+      "text_band": "medium",
+      "word_count": 23
+    },
+    {
+      "page": 5,
+      "image": "books/T4-NF-01/images/T4-NF-01_P5.png",
+      "text": "Then add water and seasoning. Let it boil. Taste it and adjust the seasoning.",
+      "layout": "image_top_text_bottom",
+      "text_band": "short",
+      "word_count": 14
+    },
+    {
+      "page": 6,
+      "image": "books/T4-NF-01/images/T4-NF-01_P6.png",
+      "text": "Now wash the rice and add it to the pot. Put the lid on. Lower the heat and leave it.",
+      "layout": "image_top_text_bottom",
+      "text_band": "medium",
+      "word_count": 20
+    },
+    {
+      "page": 7,
+      "image": "books/T4-NF-01/images/T4-NF-01_P7.png",
+      "text": "When the rice is tender and all the water has been absorbed, the jollof is ready. The bottom of the pot will be slightly browned — this is the best part.",
+      "layout": "image_top_text_bottom",
+      "text_band": "long",
+      "word_count": 31
+    },
+    {
+      "page": 8,
+      "image": "books/T4-NF-01/images/T4-NF-01_P8.png",
+      "text": "Serve the jollof with fried plantain, chicken, or fish. Eat with your family and enjoy.",
+      "layout": "image_top_text_bottom",
+      "text_band": "short",
+      "word_count": 15
+    }
+  ],
+  "back_cover": {
+    "reading_strategy": "Retell / Ask and Answer Questions",
+    "comprehension_skill": "Problem and Solution",
+    "phonological_awareness": "Short Vowels  /  Initial Blends",
+    "grammar_mechanics": "Adjectives  /  Question Marks",
+    "word_work": "High-Frequency Words  /  Content Vocabulary",
+    "text_structure": "Descriptive / Informational",
+    "about": "Jollof rice is loved across Nigeria. Follow each step  -  from blending the tomatoes to lifting the lid  -  and learn how to make one of Nigeria's greatest dishes.",
+    "fp_level": "C - D",
+    "uk_book_band": "Blue 4",
+    "website": "haarayaeducation.org"
+  },
+  "assets": {
+    "logos": {
+      "tafiya": "assets/logos/tafiya.png",
+      "haaraya_literacy": "assets/logos/haaraya_literacy.png",
+      "haaraya_education": "assets/logos/haaraya_education.png"
+    }
+  },
+  "renderer_rules": {
+    "font_family": "Andika",
+    "background": "white",
+    "text_align": "left",
+    "image_first": true,
+    "avoid_layout": [
+      "top_text_first"
+    ],
+    "layout_bands": {
+      "short": {
+        "max_words": 17,
+        "image_size": "large",
+        "text_size": "large"
+      },
+      "medium": {
+        "max_words": 25,
+        "image_size": "normal",
+        "text_size": "normal"
+      },
+      "long": {
+        "min_words": 26,
+        "image_size": "smaller",
+        "text_size": "smaller"
+      }
+    }
+  }
+}

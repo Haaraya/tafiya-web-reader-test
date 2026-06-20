@@ -1,0 +1,11 @@
+{
+  "renderer": "Tafiya Web Reader Renderer v1",
+  "test_book": "T4-NF-01",
+  "entry": "index.html",
+  "data": "books/T4-NF-01/book.json",
+  "notes": [
+    "Static prototype: no framework, no build step.",
+    "Uses locked brand zones, Andika, white background, image-first page layouts.",
+    "Designed as a visual prototype before React/Expo implementation."
+  ]
+}

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tafiya Web Reader v1</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <button class="mode-toggle" id="toggleMode">Wide preview</button>
+  <main class="app-shell">
+    <div class="reader-stage" id="stage"></div>
+    <nav class="navbar" aria-label="Book navigation">
+      <button id="prevBtn">Back</button>
+      <div class="progress" id="progress">Loading…</div>
+      <button id="nextBtn">Next</button>
+    </nav>
+  </main>
+  <script src="./reader.js"></script>
+</body>
+</html>

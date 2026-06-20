@@ -1,0 +1,458 @@
+@font-face {
+  font-family: "Andika";
+  src: local("Andika");
+}
+
+:root {
+  --page-w: min(100vw, 430px);
+  --brand-edge: 30px;
+  --text-size-short: clamp(28px, 7.1vw, 34px);
+  --text-size-medium: clamp(25px, 6.4vw, 31px);
+  --text-size-long: clamp(23px, 5.8vw, 28px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #e9e9e9;
+  font-family: Andika, system-ui, sans-serif;
+  color: #000;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+
+.reader-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 10px 12px;
+}
+
+.book-screen {
+  width: var(--page-w);
+  aspect-ratio: 148 / 210;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+/* =========================
+   FRONT COVER
+   ========================= */
+
+.cover .brand-top {
+  position: absolute;
+  top: 24px;
+  right: 31px;
+  width: 116px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  z-index: 2;
+}
+
+.brand-tafiya {
+  width: 108px;
+  height: auto;
+  display: block;
+}
+
+.brand-literacy {
+  width: 116px;
+  height: auto;
+  display: block;
+}
+
+.cover-art {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: 94px;
+  height: 49%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-art img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cover-title-zone {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 126px;
+  text-align: center;
+}
+
+.cover-title {
+  font-size: clamp(31px, 8vw, 39px);
+  line-height: 1.08;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cover-level {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 91px;
+  text-align: center;
+  font-size: clamp(20px, 5.1vw, 25px);
+  line-height: 1;
+}
+
+.brand-haaraya {
+  position: absolute;
+  right: 31px;
+  bottom: 31px;
+  width: 104px;
+  height: auto;
+}
+
+/* =========================
+   READER PAGES
+   ========================= */
+
+.reader-page {
+  padding: 0;
+}
+
+.page-art {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reader-page.short .page-art {
+  height: 47%;
+}
+
+.reader-page.medium .page-art {
+  height: 45%;
+}
+
+.reader-page.long .page-art {
+  height: 42%;
+}
+
+.page-art img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.page-text {
+  position: absolute;
+  left: 38px;
+  right: 38px;
+  top: 50%;
+  bottom: 58px;
+  font-weight: 700;
+  line-height: 1.34;
+  text-align: left;
+  overflow: hidden;
+}
+
+.reader-page.short .page-text {
+  font-size: var(--text-size-short);
+}
+
+.reader-page.medium .page-text {
+  font-size: calc(var(--text-size-medium) * 0.86);
+}
+
+.reader-page.long .page-text {
+  font-size: calc(var(--text-size-long) * 0.82);
+  line-height: 1.28;
+}
+
+.page-footer {
+  position: absolute;
+  left: 26px;
+  bottom: 28px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.page-footer img {
+  width: 22px;
+  height: auto;
+}
+
+.page-number {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* =========================
+   BACK COVER — FIXED ZONES
+   ========================= */
+
+.back-cover {
+  padding: 0;
+  font-size: 10px;
+  position: relative;
+}
+
+/* Top skills table */
+.skills-table {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 24px;
+  width: calc(100% - 48px);
+  border-collapse: collapse;
+  font-size: 9.4px;
+  line-height: 1.12;
+}
+
+.skills-table caption {
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  padding: 6px 7px;
+  caption-side: top;
+  letter-spacing: 0.02em;
+}
+
+.skills-table td {
+  border: 1px solid #999;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+.skills-table td:first-child {
+  font-weight: 700;
+  width: 42%;
+}
+
+/* About this book */
+.back-section {
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  top: 226px;
+  margin: 0;
+}
+
+.back-section h2 {
+  font-size: 12px;
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+
+.back-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  line-height: 1.1;
+}
+
+.back-about {
+  font-size: 10px;
+  line-height: 1.18;
+}
+
+.rule {
+  height: 1px;
+  background: #bbb;
+  margin: 10px 0 0;
+}
+
+.back-section h2:last-child {
+  margin-top: 10px;
+}
+
+/* Reading level table — pulled up close to heading */
+.level-table {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  top: 335px;
+  width: calc(100% - 52px);
+  border-collapse: collapse;
+  font-size: 9.5px;
+}
+
+.level-table td {
+  border: 1px solid #bbb;
+  padding: 4px 6px;
+  line-height: 1.15;
+}
+
+.level-table td:first-child {
+  font-weight: 700;
+  width: 52%;
+}
+
+/* Website */
+.website {
+  position: absolute;
+  right: 34px;
+  top: 420px;
+  font-size: 9px;
+  text-align: right;
+}
+
+/* Series statement */
+.series-statement {
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  top: 462px;
+  margin: 0;
+  font-size: 9.2px;
+  line-height: 1.14;
+  font-weight: 700;
+}
+
+/* Footer logos and copyright */
+.back-footer {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 24px;
+  display: grid;
+  grid-template-columns: 60px 1fr 84px;
+  align-items: end;
+  gap: 8px;
+}
+
+.back-footer .hf {
+  width: 60px;
+  height: auto;
+}
+
+.back-footer .copy {
+  text-align: center;
+  font-size: 6.8px;
+  line-height: 1.08;
+  font-weight: 700;
+}
+
+.back-footer .tf {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.back-footer .tf .brand-tafiya {
+  width: 74px;
+}
+
+.back-footer .tf .brand-literacy {
+  width: 84px;
+}
+
+/* =========================
+   NAVIGATION
+   ========================= */
+
+.navbar {
+  background: #111;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 90px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.navbar button {
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #fff;
+  color: #111;
+}
+
+.navbar button:disabled {
+  opacity: 0.35;
+}
+
+.progress {
+  text-align: center;
+  font-weight: 700;
+}
+
+.mode-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid #999;
+  background: #fff;
+}
+
+/* =========================
+   WIDE PREVIEW
+   ========================= */
+
+body.wide .book-screen {
+  width: min(92vw, 980px);
+  aspect-ratio: 16 / 10;
+}
+
+body.wide .reader-page .page-art {
+  left: 42px;
+  top: 48px;
+  width: 48%;
+  height: calc(100% - 110px);
+  right: auto;
+}
+
+body.wide .reader-page .page-text {
+  left: 55%;
+  right: 58px;
+  top: 23%;
+  bottom: 58px;
+  font-size: clamp(29px, 3.1vw, 38px);
+}
+
+body.wide .page-footer {
+  bottom: 30px;
+}
+
+/* =========================
+   SMALL SCREENS
+   ========================= */
+
+@media (max-width: 360px) {
+  .cover-title {
+    font-size: 30px;
+  }
+
+  .cover-level {
+    font-size: 20px;
+  }
+
+  .brand-haaraya {
+    width: 96px;
+  }
+}
