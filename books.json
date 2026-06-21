@@ -49,17 +49,17 @@
     "reader_url": "reader/?book=T4-NF-02"
   },
   {
-    "book_code": "T4-F-03",
-    "title": "Amina Goes to the Farm",
-    "level_label": "Level 4",
-    "strand": "Tafiya",
-    "book_type": "Fiction",
-    "short_description": "A Level 4 Tafiya fiction reader waiting to be connected to the live reader.",
-    "featured": true,
-    "status": "coming_soon",
-    "sort_order": 3,
-    "reader_url": ""
-  },
+  "book_code": "T4-F-03",
+  "title": "Amina Goes to the Farm",
+  "level_label": "Level 4",
+  "strand": "Tafiya",
+  "book_type": "Fiction",
+  "short_description": "Amina goes to the farm for harvest day and learns how hard, joyful, and important farm work can be.",
+  "featured": true,
+  "status": "available",
+  "sort_order": 3,
+  "reader_url": "reader/?book=T4-F-03"
+},
   {
     "book_code": "T4-F-04",
     "title": "Come to the River",
