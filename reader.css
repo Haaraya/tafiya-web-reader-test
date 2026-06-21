@@ -273,13 +273,14 @@ body {
   padding: 1cqh 2cqw;
 }
 .skills-table { display: flex; flex-direction: column; }
-.skills-row { display: grid; grid-template-columns: 42% 58%; align-items: center; }
+.skills-row { display: grid; grid-template-columns: 42% 58%; align-items: stretch; }
 .skills-row + .skills-row { border-top: 1px solid var(--ink); }
 .skills-key {
   font-weight: 700; font-size: 2.15cqw; color: var(--ink);
   padding: 0.6cqh 2cqw; border-right: 1px solid var(--ink);
+  display: flex; align-items: center;
 }
-.skills-val { font-size: 2.15cqw; color: var(--ink); padding: 0.6cqh 2.2cqw; }
+.skills-val { font-size: 2.15cqw; color: var(--ink); padding: 0.6cqh 2.2cqw; display: flex; align-items: center; }
 
 .back-section-title {
   font-weight: 700;
@@ -296,18 +297,27 @@ body {
 
 /* reading level: bordered table */
 .level-block { border: 1px solid var(--ink); }
-.level-row { display: grid; grid-template-columns: 42% 58%; align-items: center; }
+.level-row { display: grid; grid-template-columns: 42% 58%; align-items: stretch; }
 .level-row + .level-row { border-top: 1px solid var(--ink); }
 .level-key {
   font-weight: 700; font-size: 2.15cqw; color: var(--ink);
   padding: 0.6cqh 2cqw; border-right: 1px solid var(--ink);
+  display: flex; align-items: center;
 }
-.level-val { font-size: 2.15cqw; color: var(--ink); padding: 0.6cqh 2.2cqw; white-space: nowrap; }
+.level-val { font-size: 2.15cqw; color: var(--ink); padding: 0.6cqh 2.2cqw; white-space: nowrap; display: flex; align-items: center; }
 
 .back-website {
   margin-top: 0.8cqh;
   font-weight: 400; font-size: 2.15cqw; color: var(--ink);
   text-align: right;
+}
+
+/* whole bottom block pinned to the page bottom for a uniform layout
+   regardless of how tall the content above it runs */
+.back-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .back-series {
@@ -322,7 +332,6 @@ body {
   grid-template-columns: 1fr 1.3fr 1fr;
   align-items: center;
   gap: 3cqw;
-  margin-top: auto;        /* anchor to the bottom of the page */
   padding-top: 2cqh;
 }
 .back-footer .col-left { display: flex; justify-content: flex-start; align-items: center; }

@@ -82,14 +82,19 @@ async function fetchBookPackage(bookCode) {
 function normalizeBookPackage(data) {
   let pkg = data;
 
-  // Some RPC shapes return an array with one object.
+  // RPC may return [{...}]
   if (Array.isArray(pkg)) {
     pkg = pkg[0];
   }
 
-  // Some wrappers may return { get_book_package: {...} }.
+  // RPC may return { get_book_package: {...} }
   if (pkg && pkg.get_book_package) {
     pkg = pkg.get_book_package;
+  }
+
+  // Defensive wrapper support
+  if (pkg && pkg.data && pkg.data.book) {
+    pkg = pkg.data;
   }
 
   if (!pkg || typeof pkg !== "object") {
@@ -170,7 +175,7 @@ function cacheDom() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Small helpers                                                     */
+/*  Small DOM helpers                                                 */
 /* ------------------------------------------------------------------ */
 
 function makeEl(tag, cls, text) {
@@ -183,6 +188,7 @@ function makeEl(tag, cls, text) {
 function textValue(value) {
   if (value == null) return "";
   if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
   return String(value).trim();
 }
 
@@ -198,8 +204,7 @@ function bookTypeLabel(value) {
     .trim();
 }
 
-/* Level display — Supabase may return 4, "4", or "Level 4".
-   This prevents "Level Level 4". */
+/* Prevents "Level Level 4". */
 function levelLabel(lvl) {
   const s = textValue(lvl);
   if (!s) return "";
@@ -295,6 +300,10 @@ function setValue(container, value, fallbackWidth) {
   }
 }
 
+function sectionTitle(text) {
+  return makeEl("div", "back-section-title", text);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Status / error screen                                             */
 /* ------------------------------------------------------------------ */
@@ -349,7 +358,7 @@ function renderBookMeta() {
   el.brand.innerHTML = "";
 
   if (textValue(b.strand)) {
-    el.brand.appendChild(makeEl("span", "strand", b.strand));
+    el.brand.appendChild(makeEl("span", "strand", textValue(b.strand)));
   } else {
     const ph = makeEl("span", "strand is-empty");
     ph.appendChild(skeleton(72));
@@ -573,11 +582,16 @@ function renderBack() {
 
   el.surface.appendChild(lvl);
 
-  el.surface.appendChild(
+  // Bottom block pinned to the bottom of the back page.
+  // Inline marginTop protects this even if .back-bottom is not yet in reader.css.
+  const bottom = makeEl("div", "back-bottom");
+  bottom.style.marginTop = "auto";
+
+  bottom.appendChild(
     makeEl("div", "back-website", textValue(s.website) || "haarayaeducation.org")
   );
 
-  el.surface.appendChild(
+  bottom.appendChild(
     makeEl(
       "p",
       "back-series",
@@ -608,11 +622,8 @@ function renderBack() {
   footer.appendChild(center);
   footer.appendChild(right);
 
-  el.surface.appendChild(footer);
-}
-
-function sectionTitle(text) {
-  return makeEl("div", "back-section-title", text);
+  bottom.appendChild(footer);
+  el.surface.appendChild(bottom);
 }
 
 /* ------------------------------------------------------------------ */
@@ -630,7 +641,7 @@ function updateNav() {
   if (s.type === "cover") {
     el.progTxt.textContent = "Front cover";
   } else if (s.type === "back") {
-    el.progTxt.textContent = "About this book";
+    el.progTxt.textContent = "";
   } else {
     const count = screens.filter((x) => x.type === "page").length;
     el.progTxt.textContent = `Page ${s.page.page_number} of ${count}`;
