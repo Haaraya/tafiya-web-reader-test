@@ -108,3 +108,39 @@ Next planned step:
 
 Connect the homepage/library area more cleanly to the future Haaraya website structure while keeping the reader stable.
 
+## Checkpoint 4 — Data-Driven Homepage Library Working
+
+Date: 2026-06-21
+
+Status: Working
+
+Confirmed:
+
+- Root homepage still works:
+  - https://haaraya.github.io/tafiya-web-reader-test/
+
+- Homepage book cards are now rendered from one BOOKS list inside root index.html.
+
+- Current homepage books:
+  - T4-NF-01 — How We Cook Jollof Rice
+  - T4-NF-02 — The Keke Napep
+
+- Book card buttons correctly open:
+  - /reader/?book=T4-NF-01
+  - /reader/?book=T4-NF-02
+
+- Reader route still works:
+  - https://haaraya.github.io/tafiya-web-reader-test/reader/?book=T4-NF-01
+  - https://haaraya.github.io/tafiya-web-reader-test/reader/?book=T4-NF-02
+
+- Supabase reader loading still works.
+
+Current clean structure:
+
+root / = homepage  
+/reader/ = book reader
+
+Next planned step:
+
+Move the homepage book list out of index.html into a small catalog file later, or connect the homepage library to Supabase when the catalog fields are stable.
+
