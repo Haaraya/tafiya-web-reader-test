@@ -255,7 +255,7 @@ body {
    series statement, the copyright block and logos are permanent.
    =========================================================== */
 .back {
-  padding: 3.5cqh 6.5cqw;
+  padding: 2.6cqh 6.5cqw;
   overflow: hidden;
   gap: 0;
   justify-content: flex-start;
@@ -270,17 +270,17 @@ body {
   font-size: 2.2cqw;
   letter-spacing: 0.06em;
   text-align: center;
-  padding: 1cqh 2cqw;
+  padding: 0.8cqh 2cqw;
 }
 .skills-table { display: flex; flex-direction: column; }
 .skills-row { display: grid; grid-template-columns: 42% 58%; align-items: stretch; }
 .skills-row + .skills-row { border-top: 1px solid var(--ink); }
 .skills-key {
   font-weight: 700; font-size: 2.15cqw; color: var(--ink);
-  padding: 0.6cqh 2cqw; border-right: 1px solid var(--ink);
+  padding: 0.5cqh 2cqw; border-right: 1px solid var(--ink);
   display: flex; align-items: center;
 }
-.skills-val { font-size: 2.15cqw; color: var(--ink); padding: 0.6cqh 2.2cqw; display: flex; align-items: center; }
+.skills-val { font-size: 2.15cqw; color: var(--ink); padding: 0.5cqh 2.2cqw; display: flex; align-items: center; }
 
 .back-section-title {
   font-weight: 700;
@@ -288,12 +288,12 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink);
-  margin: 1.6cqh 0 0.6cqh;
+  margin: 1cqh 0 0.4cqh;
 }
 .back-booktitle { font-weight: 700; font-size: 3.1cqw; color: var(--ink); margin-bottom: 0.7cqh; }
 .back-about { font-weight: 400; font-size: 2.3cqw; line-height: 1.45; color: var(--ink); text-align: left; text-wrap: pretty; }
 
-.back-divider { border-top: 1px solid var(--line); margin: 1.6cqh 0; }
+.back-divider { border-top: 1px solid var(--line); margin: 0.9cqh 0; }
 
 /* reading level: bordered table */
 .level-block { border: 1px solid var(--ink); }
@@ -301,10 +301,10 @@ body {
 .level-row + .level-row { border-top: 1px solid var(--ink); }
 .level-key {
   font-weight: 700; font-size: 2.15cqw; color: var(--ink);
-  padding: 0.6cqh 2cqw; border-right: 1px solid var(--ink);
+  padding: 0.5cqh 2cqw; border-right: 1px solid var(--ink);
   display: flex; align-items: center;
 }
-.level-val { font-size: 2.15cqw; color: var(--ink); padding: 0.6cqh 2.2cqw; white-space: nowrap; display: flex; align-items: center; }
+.level-val { font-size: 2.15cqw; color: var(--ink); padding: 0.5cqh 2.2cqw; white-space: nowrap; display: flex; align-items: center; }
 
 .back-website {
   margin-top: 0.8cqh;
@@ -321,8 +321,8 @@ body {
 }
 
 .back-series {
-  margin-top: 1.6cqh;
-  font-weight: 700; font-size: 2.3cqw; line-height: 1.45; color: var(--ink);
+  margin-top: 1cqh;
+  font-weight: 700; font-size: 2.3cqw; line-height: 1.4; color: var(--ink);
   text-align: left; text-wrap: pretty;
 }
 
@@ -332,15 +332,15 @@ body {
   grid-template-columns: 1fr 1.3fr 1fr;
   align-items: center;
   gap: 3cqw;
-  padding-top: 2cqh;
+  padding-top: 1cqh;
 }
 .back-footer .col-left { display: flex; justify-content: flex-start; align-items: center; }
 .back-footer .col-center { text-align: center; }
 .back-footer .col-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1cqh; }
 .back-footer img { width: auto; object-fit: contain; }
-.back-footer .logo-haaraya { height: 10cqh; }
-.back-footer .logo-tafiya { height: 4.4cqh; }
-.back-footer .logo-literacy { height: 2.5cqh; }
+.back-footer .logo-haaraya { height: 8cqh; }
+.back-footer .logo-tafiya { height: 4cqh; }
+.back-footer .logo-literacy { height: 2.3cqh; }
 .back-imprint { font-weight: 700; font-size: 1.95cqw; line-height: 1.4; color: var(--ink); }
 
 /* skeleton bar — a value Supabase will fill */
