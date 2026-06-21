@@ -16,10 +16,8 @@
       --green-800: #0f5c24;
       --green-700: #16832f;
       --cream: #f4f0e6;
-      --cream-2: #fffaf0;
       --paper: #fffdf6;
       --yellow: #f6c332;
-      --yellow-dark: #d99d10;
       --ink: #101510;
       --muted: #5f625c;
       --line: rgba(28, 54, 30, 0.16);
@@ -28,15 +26,8 @@
       --font-display: "Fraunces", Georgia, serif;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
       min-height: 100vh;
@@ -48,9 +39,7 @@
         var(--cream);
     }
 
-    a {
-      color: inherit;
-    }
+    a { color: inherit; }
 
     .site-header {
       position: sticky;
@@ -110,9 +99,7 @@
       border-radius: 999px;
     }
 
-    .nav-links a:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
+    .nav-links a:hover { background: rgba(255, 255, 255, 0.1); }
 
     .nav-cta {
       background: var(--yellow);
@@ -120,9 +107,7 @@
       box-shadow: 0 10px 24px -16px rgba(246, 195, 50, 0.9);
     }
 
-    .nav-links .nav-cta:hover {
-      background: #ffd352;
-    }
+    .nav-links .nav-cta:hover { background: #ffd352; }
 
     .page {
       max-width: 1160px;
@@ -211,9 +196,7 @@
       letter-spacing: -0.07em;
     }
 
-    .gold {
-      color: var(--yellow);
-    }
+    .gold { color: var(--yellow); }
 
     .lede {
       max-width: 560px;
@@ -243,9 +226,7 @@
       transition: transform 0.12s ease, background 0.16s ease, border-color 0.16s ease;
     }
 
-    .btn:active {
-      transform: translateY(1px) scale(0.99);
-    }
+    .btn:active { transform: translateY(1px) scale(0.99); }
 
     .btn-primary {
       background: var(--yellow);
@@ -253,9 +234,7 @@
       box-shadow: 0 16px 28px -22px rgba(246, 195, 50, 1);
     }
 
-    .btn-primary:hover {
-      background: #ffd65a;
-    }
+    .btn-primary:hover { background: #ffd65a; }
 
     .btn-outline {
       color: white;
@@ -493,6 +472,14 @@
       flex: 1;
     }
 
+    .book-code {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
     .book-card .btn {
       position: relative;
       z-index: 1;
@@ -604,21 +591,17 @@
       }
 
       .hero-actions,
-      .books,
       .journey-grid {
+        display: grid;
         grid-template-columns: 1fr;
       }
 
-      .hero-actions {
-        display: grid;
+      .books {
+        grid-template-columns: 1fr;
       }
 
       .btn {
         width: 100%;
-      }
-
-      .books {
-        display: grid;
       }
 
       .book-card .btn {
@@ -656,7 +639,7 @@
         <a href="./">Home</a>
         <a href="#how">How it works</a>
         <a href="#library">Library</a>
-        <a class="nav-cta" href="reader/?book=T4-NF-01">Open reader</a>
+        <a class="nav-cta" data-first-book-link href="reader/?book=T4-NF-01">Open reader</a>
       </div>
     </nav>
   </header>
@@ -677,7 +660,7 @@
         </p>
 
         <div class="hero-actions">
-          <a class="btn btn-primary" href="reader/?book=T4-NF-01">Open the reader →</a>
+          <a class="btn btn-primary" data-first-book-link href="reader/?book=T4-NF-01">Open the reader →</a>
           <a class="btn btn-outline" href="#library">Explore test books</a>
         </div>
       </div>
@@ -742,8 +725,8 @@
       <div class="section-kicker">The Library</div>
       <h2 class="section-heading">Explore the Haaraya reading journey.</h2>
       <p class="section-copy">
-        For now, this prototype keeps the library small and honest: two working Level 4
-        Tafiya Non-Fiction books connected to the live reader.
+        For now, this prototype keeps the library small and honest:
+        <span id="bookCount">two</span> working Level 4 Tafiya Non-Fiction books connected to the live reader.
       </p>
 
       <div class="library-panel">
@@ -756,25 +739,7 @@
           <span class="strand-tag">Poetry</span>
         </div>
 
-        <div class="books">
-          <article class="book-card">
-            <div class="book-meta">Level 4 · Tafiya Non-Fiction</div>
-            <h3 class="book-title">How We Cook Jollof Rice</h3>
-            <p class="book-desc">
-              A familiar Nigerian food book built as a live Supabase-backed reader package.
-            </p>
-            <a class="btn btn-primary" href="reader/?book=T4-NF-01">Read this book →</a>
-          </article>
-
-          <article class="book-card">
-            <div class="book-meta">Level 4 · Tafiya Non-Fiction</div>
-            <h3 class="book-title">The Keke Napep</h3>
-            <p class="book-desc">
-              A real-world transport book showing how everyday Nigerian topics become reading material.
-            </p>
-            <a class="btn btn-primary" href="reader/?book=T4-NF-02">Read this book →</a>
-          </article>
-        </div>
+        <div class="books" id="bookGrid" aria-label="Available test books"></div>
 
         <p class="status-note">
           Prototype status: homepage at root, reader at <strong>/reader/</strong>, book packages loaded
@@ -799,16 +764,13 @@
         <ul>
           <li><a href="#how">How it works</a></li>
           <li><a href="#library">Library</a></li>
-          <li><a href="reader/?book=T4-NF-01">Reader test</a></li>
+          <li><a data-first-book-link href="reader/?book=T4-NF-01">Reader test</a></li>
         </ul>
       </section>
 
       <section>
         <strong>Current test books</strong>
-        <ul>
-          <li><a href="reader/?book=T4-NF-01">How We Cook Jollof Rice</a></li>
-          <li><a href="reader/?book=T4-NF-02">The Keke Napep</a></li>
-        </ul>
+        <ul id="footerBookList"></ul>
       </section>
     </div>
 
@@ -816,5 +778,130 @@
       © 2026 Haaraya Education. Prototype build for Tafiya reader testing.
     </div>
   </footer>
+
+  <script>
+    const BOOKS = [
+      {
+        code: "T4-NF-01",
+        title: "How We Cook Jollof Rice",
+        level: "Level 4",
+        strand: "Tafiya Non-Fiction",
+        description: "A familiar Nigerian food book built as a live Supabase-backed reader package."
+      },
+      {
+        code: "T4-NF-02",
+        title: "The Keke Napep",
+        level: "Level 4",
+        strand: "Tafiya Non-Fiction",
+        description: "A real-world transport book showing how everyday Nigerian topics become reading material."
+      }
+    ];
+
+    function readerHref(bookCode) {
+      return `reader/?book=${encodeURIComponent(bookCode)}`;
+    }
+
+    function bookCountText(count) {
+      const words = {
+        0: "no",
+        1: "one",
+        2: "two",
+        3: "three",
+        4: "four",
+        5: "five",
+        6: "six",
+        7: "seven",
+        8: "eight",
+        9: "nine",
+        10: "ten"
+      };
+
+      return words[count] || String(count);
+    }
+
+    function renderBookCards() {
+      const grid = document.getElementById("bookGrid");
+      if (!grid) return;
+
+      grid.innerHTML = "";
+
+      BOOKS.forEach((book) => {
+        const card = document.createElement("article");
+        card.className = "book-card";
+
+        const meta = document.createElement("div");
+        meta.className = "book-meta";
+        meta.textContent = `${book.level} · ${book.strand}`;
+
+        const title = document.createElement("h3");
+        title.className = "book-title";
+        title.textContent = book.title;
+
+        const desc = document.createElement("p");
+        desc.className = "book-desc";
+        desc.textContent = book.description;
+
+        const code = document.createElement("div");
+        code.className = "book-code";
+        code.textContent = book.code;
+
+        const link = document.createElement("a");
+        link.className = "btn btn-primary";
+        link.href = readerHref(book.code);
+        link.textContent = "Read this book →";
+
+        card.appendChild(meta);
+        card.appendChild(title);
+        card.appendChild(desc);
+        card.appendChild(code);
+        card.appendChild(link);
+
+        grid.appendChild(card);
+      });
+    }
+
+    function renderFooterBooks() {
+      const list = document.getElementById("footerBookList");
+      if (!list) return;
+
+      list.innerHTML = "";
+
+      BOOKS.forEach((book) => {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+
+        link.href = readerHref(book.code);
+        link.textContent = book.title;
+
+        item.appendChild(link);
+        list.appendChild(item);
+      });
+    }
+
+    function wireFirstBookLinks() {
+      const firstBook = BOOKS[0];
+      if (!firstBook) return;
+
+      document.querySelectorAll("[data-first-book-link]").forEach((link) => {
+        link.href = readerHref(firstBook.code);
+      });
+    }
+
+    function updateBookCount() {
+      const count = document.getElementById("bookCount");
+      if (!count) return;
+
+      count.textContent = bookCountText(BOOKS.length);
+    }
+
+    function bootHomepage() {
+      wireFirstBookLinks();
+      updateBookCount();
+      renderBookCards();
+      renderFooterBooks();
+    }
+
+    document.addEventListener("DOMContentLoaded", bootHomepage);
+  </script>
 </body>
 </html>
