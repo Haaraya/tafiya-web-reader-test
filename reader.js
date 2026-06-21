@@ -1,16 +1,19 @@
 /* ============================================================
-   Tafiya Reader — Supabase-ready prototype logic
+   Tafiya Reader — Supabase-connected prototype
    Plain JavaScript. No frameworks, no build tools, no libraries.
 
-   The reader renders from ONE object: bookPackage.
-   Its shape matches the Supabase RPC get_book_package(input_book_code)
-   response exactly.
+   Reads:
+   ?book=T4-NF-01
 
-   Data flow:
-   1. Read ?book=T4-NF-01 from the URL.
-   2. Ask Supabase RPC get_book_package for that book.
-   3. Render the returned bookPackage.
-   4. If Supabase fails, fall back to local mock data.
+   Calls:
+   POST /rest/v1/rpc/get_book_package
+
+   Body:
+   { "input_book_code": "T4-NF-01" }
+
+   Security:
+   Frontend uses ONLY the Supabase publishable key.
+   Never use sb_secret_ keys in this file.
    ============================================================ */
 
 /* ------------------------------------------------------------------ */
@@ -19,7 +22,8 @@
 
 const SUPABASE_URL = "https://laihhrkxnxzohaiiisou.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_qW4msFbGQ9QuqIZ6-G8QfA_JY_pvcsY";
-const SUPABASE_BUCKET = "book-assets";
+
+const STORAGE_BUCKET = "book-assets";
 
 /* ------------------------------------------------------------------ */
 /*  URL → book_code                                                   */
@@ -31,46 +35,35 @@ function getBookCodeFromUrl() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Asset URL helper                                                  */
-/* ------------------------------------------------------------------ */
-
-function assetUrl(path) {
-  if (!path) return "";
-
-  if (path.startsWith("http://") || path.startsWith("https://")) {
-    return path;
-  }
-
-  if (
-    !SUPABASE_URL ||
-    SUPABASE_URL === "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE"
-  ) {
-    return path;
-  }
-
-  return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${path}`;
-}
-
-/* ------------------------------------------------------------------ */
 /*  Supabase fetch                                                    */
 /* ------------------------------------------------------------------ */
 
+function supabaseIsConfigured() {
+  return (
+    SUPABASE_URL &&
+    SUPABASE_URL.includes("supabase.co") &&
+    SUPABASE_PUBLISHABLE_KEY &&
+    !SUPABASE_PUBLISHABLE_KEY.includes("YOUR-") &&
+    !SUPABASE_PUBLISHABLE_KEY.startsWith("sb_secret_")
+  );
+}
+
 async function fetchBookPackage(bookCode) {
-  if (
-    !SUPABASE_URL ||
-    !SUPABASE_PUBLISHABLE_KEY ||
-    SUPABASE_URL === "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE" ||
-    SUPABASE_PUBLISHABLE_KEY === "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
-  ) {
-    throw new Error("Supabase URL/key placeholders have not been replaced.");
+  if (!supabaseIsConfigured()) {
+    throw new Error(
+      "Supabase is not configured. Paste your Supabase URL and publishable key at the top of reader.js."
+    );
   }
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_book_package`, {
+  const endpoint = `${SUPABASE_URL}/rest/v1/rpc/get_book_package`;
+
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
-      apikey: SUPABASE_PUBLISHABLE_KEY,
-      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      "Content-Type": "application/json"
+      "apikey": SUPABASE_PUBLISHABLE_KEY,
+      "Authorization": `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
     },
     body: JSON.stringify({
       input_book_code: bookCode
@@ -78,136 +71,79 @@ async function fetchBookPackage(bookCode) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Supabase request failed: ${response.status} ${response.statusText}. ${errorText}`
-    );
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Supabase RPC failed: ${response.status} ${response.statusText}. ${detail}`);
   }
 
   const data = await response.json();
-
-  if (!data || !data.book || !Array.isArray(data.pages) || !data.skills) {
-    console.log("[Tafiya Reader] Supabase returned:", data);
-    throw new Error("Supabase returned an incomplete book package.");
-  }
-
-  return data;
+  return normalizeBookPackage(data);
 }
 
-/* ------------------------------------------------------------------ */
-/*  Mock data fallback — exact get_book_package shape                  */
-/* ------------------------------------------------------------------ */
+function normalizeBookPackage(data) {
+  let pkg = data;
 
-function getMockBookPackage(bookCode) {
-  const isKeke = bookCode === "T4-NF-02";
+  // Some RPC shapes return an array with one object.
+  if (Array.isArray(pkg)) {
+    pkg = pkg[0];
+  }
 
-  const bookPackage = {
-    book: {
-      id: isKeke ? "mock-id-keke" : "mock-id-jollof",
-      book_code: isKeke ? "T4-NF-02" : "T4-NF-01",
-      title: isKeke ? "The Keke Napep" : "How We Cook Jollof Rice",
-      strand: "Non-Fiction",
-      level: 4,
-      tafiya_name: "Tafiya",
-      book_type: "Non-Fiction",
-      theme: "Everyday Life",
-      topic: isKeke ? "Transport" : "Food",
-      cover_image_path: isKeke
-        ? "sample-images/T4-NF-02_FC.png"
-        : "sample-images/T4-NF-01_FC.png",
-      status: "approved",
-      created_at: "",
-      updated_at: ""
-    },
+  // Some wrappers may return { get_book_package: {...} }.
+  if (pkg && pkg.get_book_package) {
+    pkg = pkg.get_book_package;
+  }
 
-    pages: isKeke
-      ? [
-          {
-            id: "mock-keke-page-1",
-            book_id: "mock-id-keke",
-            page_number: 1,
-            page_text: "A keke can go on the road.",
-            image_path: "sample-images/T4-NF-02_P1.png",
-            layout: "image_top_text_bottom",
-            text_band: "bottom",
-            word_count: 7,
-            created_at: "",
-            updated_at: ""
-          },
-          {
-            id: "mock-keke-page-2",
-            book_id: "mock-id-keke",
-            page_number: 2,
-            page_text: "People ride in a keke.",
-            image_path: "sample-images/T4-NF-02_P2.png",
-            layout: "image_top_text_bottom",
-            text_band: "bottom",
-            word_count: 6,
-            created_at: "",
-            updated_at: ""
-          }
-        ]
-      : [
-          {
-            id: "mock-jollof-page-1",
-            book_id: "mock-id-jollof",
-            page_number: 1,
-            page_text: "We wash the rice.",
-            image_path: "sample-images/T4-NF-01_P1.png",
-            layout: "image_top_text_bottom",
-            text_band: "bottom",
-            word_count: 4,
-            created_at: "",
-            updated_at: ""
-          },
-          {
-            id: "mock-jollof-page-2",
-            book_id: "mock-id-jollof",
-            page_number: 2,
-            page_text: "We cook the stew.",
-            image_path: "sample-images/T4-NF-01_P2.png",
-            layout: "image_top_text_bottom",
-            text_band: "bottom",
-            word_count: 4,
-            created_at: "",
-            updated_at: ""
-          }
-        ],
+  if (!pkg || typeof pkg !== "object") {
+    throw new Error("Supabase returned an empty or invalid book package.");
+  }
 
-    skills: {
-      id: isKeke ? "mock-keke-skills-id" : "mock-jollof-skills-id",
-      book_id: isKeke ? "mock-id-keke" : "mock-id-jollof",
-      reading_strategy: "Ask and Answer Questions",
-      comprehension_skill: "Sequence Events",
-      phonological_awareness: "Syllables",
-      grammar_mechanics: "Simple Sentences",
-      word_work: "Content Vocabulary",
-      text_structure: "Sequence",
-      topic: isKeke ? "Transport" : "Food",
-      key_vocabulary: isKeke
-        ? "keke, road, driver, ride"
-        : "rice, stew, pot, pepper",
-      total_word_count: isKeke ? 96 : 120,
-      about_text: isKeke
-        ? "This book introduces children to the keke napep as everyday transport."
-        : "This book shows how people cook jollof rice step by step.",
-      fp_level: "D",
-      uk_book_band: "Red",
-      website: "haarayaeducation.org",
-      created_at: "",
-      updated_at: ""
-    },
+  pkg.book = pkg.book || {};
+  pkg.pages = Array.isArray(pkg.pages) ? pkg.pages : [];
+  pkg.skills = pkg.skills || {};
+  pkg.assets = pkg.assets || {};
+  pkg.assets.logos = pkg.assets.logos || {};
 
-    assets: {
-      logos: {
-        haaraya_education: "sample-logos/haaraya_education_logo_transparent.png",
-        haaraya_literacy: "sample-logos/haaraya_literacy_logo.png",
-        tafiya: "sample-logos/tafiya_logo.png"
-      }
-    }
-  };
+  if (!pkg.book.book_code) {
+    pkg.book.book_code = getBookCodeFromUrl();
+  }
 
-  return bookPackage;
+  return pkg;
+}
+
+/* Resolve a stored path to a usable URL.
+   Supports:
+   - full https:// URLs
+   - /storage/v1/object/public/book-assets/...
+   - book-assets/...
+   - plain paths like T4-NF-01/page-01.png
+*/
+function assetUrl(path) {
+  if (!path) return "";
+
+  const raw = String(path).trim();
+  if (!raw) return "";
+
+  if (
+    raw.startsWith("http://") ||
+    raw.startsWith("https://") ||
+    raw.startsWith("data:") ||
+    raw.startsWith("blob:")
+  ) {
+    return raw;
+  }
+
+  if (raw.startsWith("/storage/v1/object/public/")) {
+    return `${SUPABASE_URL}${raw}`;
+  }
+
+  let clean = raw.replace(/^\/+/, "");
+
+  if (clean.startsWith(`${STORAGE_BUCKET}/`)) {
+    clean = clean.slice(STORAGE_BUCKET.length + 1);
+  }
+
+  clean = encodeURI(clean).replace(/#/g, "%23");
+
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${clean}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -215,7 +151,7 @@ function getMockBookPackage(bookCode) {
 /* ------------------------------------------------------------------ */
 
 let bookPackage = null;
-let screens = []; // ordered: cover → pages → back
+let screens = [];
 let currentIndex = 0;
 
 const el = {};
@@ -223,23 +159,73 @@ const el = {};
 function cacheDom() {
   el.runTitle = document.getElementById("runningTitle");
   el.runLevel = document.getElementById("runningLevel");
-  el.brand = document.getElementById("brand");
-  el.book = document.getElementById("book");
-  el.surface = null;
-  el.prev = document.getElementById("prevBtn");
-  el.next = document.getElementById("nextBtn");
-  el.back = document.getElementById("backBtn");
-  el.progTxt = document.getElementById("progressText");
-  el.dots = document.getElementById("dots");
+  el.brand    = document.getElementById("brand");
+  el.book     = document.getElementById("book");
+  el.surface  = null;
+  el.prev     = document.getElementById("prevBtn");
+  el.next     = document.getElementById("nextBtn");
+  el.back     = document.getElementById("backBtn");
+  el.progTxt  = document.getElementById("progressText");
+  el.dots     = document.getElementById("dots");
 }
 
 /* ------------------------------------------------------------------ */
-/*  Small DOM helpers                                                 */
+/*  Small helpers                                                     */
 /* ------------------------------------------------------------------ */
 
+function makeEl(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function textValue(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+  return String(value).trim();
+}
+
+function bookTypeLabel(value) {
+  const s = textValue(value);
+  if (!s) return "";
+
+  return s
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\bnon fiction\b/i, "Non-Fiction")
+    .replace(/\bnon-fiction\b/i, "Non-Fiction")
+    .trim();
+}
+
+/* Level display — Supabase may return 4, "4", or "Level 4".
+   This prevents "Level Level 4". */
+function levelLabel(lvl) {
+  const s = textValue(lvl);
+  if (!s) return "";
+
+  if (/^level\b/i.test(s)) {
+    return s.replace(/\s+/g, " ");
+  }
+
+  return `Level ${s}`;
+}
+
+function topMetaLabel(book) {
+  const parts = [];
+
+  const lvl = levelLabel(book.level);
+  const type = bookTypeLabel(book.book_type);
+
+  if (lvl) parts.push(lvl);
+  if (type) parts.push(type);
+
+  return parts.join(" · ");
+}
+
 function logoPath(key) {
-  const L = (bookPackage.assets && bookPackage.assets.logos) || {};
-  return L[key] || "";
+  const logos = (bookPackage.assets && bookPackage.assets.logos) || {};
+  return logos[key] || "";
 }
 
 function logoImg(path, cls) {
@@ -251,6 +237,7 @@ function logoImg(path, cls) {
   img.alt = "";
   img.onerror = () => img.remove();
   img.src = src;
+
   return img;
 }
 
@@ -275,14 +262,76 @@ function placeholderInto(container, label) {
   const note = document.createElement("div");
   note.className = "ph-note";
   note.textContent = label;
+
   container.appendChild(note);
 }
 
-function makeEl(tag, cls, text) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (text != null) e.textContent = text;
-  return e;
+function skeleton(widthPx) {
+  const sk = makeEl("span", "skeleton");
+  sk.style.width = (widthPx || 60) + "px";
+  return sk;
+}
+
+function skeletonLines(n) {
+  const frag = document.createDocumentFragment();
+  const widths = [100, 100, 62];
+
+  for (let i = 0; i < n; i++) {
+    const bar = makeEl("span", "skeleton skeleton-line");
+    bar.style.width = (widths[i] != null ? widths[i] : 100) + "%";
+    frag.appendChild(bar);
+  }
+
+  return frag;
+}
+
+function setValue(container, value, fallbackWidth) {
+  const v = textValue(value);
+
+  if (v) {
+    container.textContent = v;
+  } else {
+    container.appendChild(skeleton(fallbackWidth || 90));
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Status / error screen                                             */
+/* ------------------------------------------------------------------ */
+
+function renderStatus(title, detail) {
+  if (!el.book) return;
+
+  el.book.className = "book";
+  el.book.innerHTML = "";
+
+  const surface = makeEl("div", "surface story");
+  el.book.appendChild(surface);
+  el.surface = surface;
+
+  const box = makeEl("div", "story-text");
+  box.style.top = "40cqh";
+  box.style.fontSize = "4.2cqw";
+  box.style.lineHeight = "1.35";
+  box.style.fontWeight = "700";
+  box.textContent = title;
+
+  const small = makeEl("div", "");
+  small.style.marginTop = "2cqh";
+  small.style.fontSize = "2.7cqw";
+  small.style.fontWeight = "400";
+  small.style.lineHeight = "1.35";
+  small.textContent = detail || "";
+
+  box.appendChild(small);
+  surface.appendChild(box);
+
+  if (el.runTitle) el.runTitle.textContent = title;
+  if (el.runLevel) el.runLevel.textContent = "";
+  if (el.progTxt) el.progTxt.textContent = "";
+  if (el.dots) el.dots.innerHTML = "";
+  if (el.prev) el.prev.disabled = true;
+  if (el.next) el.next.disabled = true;
 }
 
 /* ------------------------------------------------------------------ */
@@ -292,18 +341,14 @@ function makeEl(tag, cls, text) {
 function renderBookMeta() {
   const b = bookPackage.book || {};
 
-  el.runTitle.textContent =
-    b.title && b.title.trim() ? b.title : "Book title";
+  el.runTitle.textContent = textValue(b.title) || "Book title";
+  el.runLevel.textContent = topMetaLabel(b);
 
-  el.runLevel.textContent =
-    (b.level != null ? `Level ${b.level}` : "") +
-    (b.book_type ? `  ·  ${b.book_type}` : "");
-
-  document.title = (b.title || "Tafiya Reader") + " — Tafiya Reader";
+  document.title = `${textValue(b.title) || "Tafiya Reader"} — Tafiya Reader`;
 
   el.brand.innerHTML = "";
 
-  if (b.strand && b.strand.trim()) {
+  if (textValue(b.strand)) {
     el.brand.appendChild(makeEl("span", "strand", b.strand));
   } else {
     const ph = makeEl("span", "strand is-empty");
@@ -313,7 +358,7 @@ function renderBookMeta() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Screen list: cover → pages sorted by page_number → back           */
+/*  Screen list: cover → pages → back                                 */
 /* ------------------------------------------------------------------ */
 
 function buildScreens() {
@@ -344,16 +389,19 @@ function renderScreen() {
 
   const surface = makeEl(
     "div",
-    "surface " +
-      (s.type === "cover" ? "cover" : s.type === "back" ? "back" : "story")
+    "surface " + (s.type === "cover" ? "cover" : s.type === "back" ? "back" : "story")
   );
 
   el.book.appendChild(surface);
   el.surface = surface;
 
-  if (s.type === "cover") renderCover();
-  else if (s.type === "back") renderBack();
-  else renderPage(s.page);
+  if (s.type === "cover") {
+    renderCover();
+  } else if (s.type === "back") {
+    renderBack();
+  } else {
+    renderPage(s.page);
+  }
 
   el.surface.scrollTop = 0;
   updateNav();
@@ -383,13 +431,9 @@ function renderCover() {
 
   const titles = makeEl("div", "cover-titles");
 
-  const h = makeEl(
-    "h1",
-    "cover-title",
-    b.title && b.title.trim() ? b.title : "Book title"
-  );
-
-  if (!(b.title && b.title.trim())) h.classList.add("is-empty");
+  const titleText = textValue(b.title);
+  const h = makeEl("h1", "cover-title", titleText || "Book title");
+  if (!titleText) h.classList.add("is-empty");
 
   titles.appendChild(h);
 
@@ -397,9 +441,7 @@ function renderCover() {
     makeEl(
       "div",
       "cover-sub",
-      `${b.tafiya_name || "Tafiya"}  •  Level ${
-        b.level != null ? b.level : "—"
-      }`
+      `${textValue(b.tafiya_name) || "Tafiya"}  •  ${levelLabel(b.level) || "—"}`
     )
   );
 
@@ -419,20 +461,17 @@ function renderCover() {
 
 function renderPage(page) {
   const imgWrap = makeEl("div", "story-img");
-  imageInto(
-    imgWrap,
-    page.image_path,
-    `illustration · page ${page.page_number}`
-  );
-
+  imageInto(imgWrap, page.image_path, `illustration · page ${page.page_number}`);
   el.surface.appendChild(imgWrap);
 
   const txt = makeEl("p", "story-text");
+  const pageText = textValue(page.page_text);
 
-  const has = page.page_text && page.page_text.trim();
-  txt.textContent = has ? page.page_text : "Story text will appear here";
+  txt.textContent = pageText || "Story text will appear here";
 
-  if (!has) txt.classList.add("is-empty");
+  if (!pageText) {
+    txt.classList.add("is-empty");
+  }
 
   el.surface.appendChild(txt);
 }
@@ -443,40 +482,46 @@ function renderPage(page) {
 
 function renderBack() {
   const b = bookPackage.book || {};
-  const sk = bookPackage.skills || {};
+  const s = bookPackage.skills || {};
+  const type = bookTypeLabel(b.book_type);
+  const isNonFiction = /non[-\s]?fiction/i.test(type);
 
   const skillsBlock = makeEl("div", "skills-block");
 
-  skillsBlock.appendChild(
-    makeEl(
-      "div",
-      "skills-header",
-      `${b.book_code || ""} · SKILLS COVERED IN THIS BOOK`
-    )
-  );
+  const headerText =
+    `${textValue(b.book_code) || ""} · ELEMENTS USED IN THIS BOOK` +
+    (type ? ` — ${type.toUpperCase()}` : "");
+
+  skillsBlock.appendChild(makeEl("div", "skills-header", headerText));
 
   const table = makeEl("div", "skills-table");
 
-  const skillRows = [
-    ["Reading Strategy", sk.reading_strategy],
-    ["Comprehension Skill", sk.comprehension_skill],
-    ["Phonological Awareness", sk.phonological_awareness],
-    ["Grammar and Mechanics", sk.grammar_mechanics],
-    ["Word Work", sk.word_work],
-    ["Text Structure", sk.text_structure]
-  ];
+  const rows = isNonFiction
+    ? [
+        ["Topic", s.topic || b.topic],
+        ["Text Structure", s.text_structure],
+        ["Reading Strategy", s.reading_strategy],
+        ["Comprehension Skill", s.comprehension_skill],
+        ["Grammar and Mechanics", s.grammar_mechanics],
+        ["Word Work", s.word_work],
+        ["Key Vocabulary", s.key_vocabulary],
+        ["Word Count", s.total_word_count]
+      ]
+    : [
+        ["Reading Strategy", s.reading_strategy],
+        ["Comprehension Skill", s.comprehension_skill],
+        ["Phonological Awareness", s.phonological_awareness],
+        ["Grammar and Mechanics", s.grammar_mechanics],
+        ["Word Work", s.word_work],
+        ["Text Structure", s.text_structure]
+      ];
 
-  skillRows.forEach(([label, value], i) => {
+  rows.forEach(([label, value], i) => {
     const row = makeEl("div", "skills-row");
     row.appendChild(makeEl("span", "skills-key", label));
 
     const vv = makeEl("span", "skills-val");
-
-    if (value && String(value).trim()) {
-      vv.textContent = value;
-    } else {
-      vv.appendChild(skeleton([120, 96, 108, 88][i % 4]));
-    }
+    setValue(vv, value, [120, 96, 108, 88][i % 4]);
 
     row.appendChild(vv);
     table.appendChild(row);
@@ -487,23 +532,15 @@ function renderBack() {
 
   el.surface.appendChild(sectionTitle("About this book"));
 
-  const bt = makeEl(
-    "div",
-    "back-booktitle",
-    b.title && b.title.trim() ? b.title : ""
-  );
-
-  if (!(b.title && b.title.trim())) {
-    bt.classList.add("is-empty");
-    bt.appendChild(skeleton(150));
-  }
-
+  const bt = makeEl("div", "back-booktitle");
+  setValue(bt, b.title, 150);
   el.surface.appendChild(bt);
 
   const about = makeEl("p", "back-about");
+  const aboutText = textValue(s.about_text);
 
-  if (sk.about_text && String(sk.about_text).trim()) {
-    about.textContent = sk.about_text;
+  if (aboutText) {
+    about.textContent = aboutText;
   } else {
     about.classList.add("is-empty");
     about.appendChild(skeletonLines(3));
@@ -518,9 +555,9 @@ function renderBack() {
   const lvl = makeEl("div", "level-block");
 
   const levelRows = [
-    ["Haaraya Level", b.level != null ? `${b.tafiya_name || "Tafiya"} ${b.level}` : ""],
-    ["Fountas & Pinnell", sk.fp_level],
-    ["UK Book Band", sk.uk_book_band]
+    ["Haaraya Level", levelLabel(b.level)],
+    ["Fountas & Pinnell", s.fp_level],
+    ["UK Book Band", s.uk_book_band]
   ];
 
   levelRows.forEach(([label, value], i) => {
@@ -528,12 +565,7 @@ function renderBack() {
     row.appendChild(makeEl("span", "level-key", label));
 
     const vv = makeEl("span", "level-val");
-
-    if (value && String(value).trim()) {
-      vv.textContent = value;
-    } else {
-      vv.appendChild(skeleton([90, 50, 64][i % 3]));
-    }
+    setValue(vv, value, [90, 50, 64][i % 3]);
 
     row.appendChild(vv);
     lvl.appendChild(row);
@@ -542,7 +574,7 @@ function renderBack() {
   el.surface.appendChild(lvl);
 
   el.surface.appendChild(
-    makeEl("div", "back-website", sk.website || "haarayaeducation.org")
+    makeEl("div", "back-website", textValue(s.website) || "haarayaeducation.org")
   );
 
   el.surface.appendChild(
@@ -579,31 +611,8 @@ function renderBack() {
   el.surface.appendChild(footer);
 }
 
-/* ------------------------------------------------------------------ */
-/*  Back cover helpers                                                */
-/* ------------------------------------------------------------------ */
-
 function sectionTitle(text) {
   return makeEl("div", "back-section-title", text);
-}
-
-function skeleton(widthPx) {
-  const sk = makeEl("span", "skeleton");
-  sk.style.width = (widthPx || 60) + "px";
-  return sk;
-}
-
-function skeletonLines(n) {
-  const frag = document.createDocumentFragment();
-  const widths = [100, 100, 62];
-
-  for (let i = 0; i < n; i++) {
-    const bar = makeEl("span", "skeleton skeleton-line");
-    bar.style.width = (widths[i] != null ? widths[i] : 100) + "%";
-    frag.appendChild(bar);
-  }
-
-  return frag;
 }
 
 /* ------------------------------------------------------------------ */
@@ -639,8 +648,8 @@ function updateNav() {
       sc.type === "cover"
         ? "cover"
         : sc.type === "back"
-        ? "back cover"
-        : `page ${sc.page.page_number}`;
+          ? "back cover"
+          : `page ${sc.page.page_number}`;
 
     d.setAttribute("aria-label", `Go to ${lbl}`);
     d.addEventListener("click", () => goTo(i));
@@ -671,9 +680,7 @@ function previousPage() {
 /* ------------------------------------------------------------------ */
 
 function progressKey() {
-  return `tafiya-reader:${
-    (bookPackage.book && bookPackage.book.book_code) || ""
-  }:screen`;
+  return `tafiya-reader:${(bookPackage.book && bookPackage.book.book_code) || ""}:screen`;
 }
 
 function saveProgress() {
@@ -701,7 +708,15 @@ function bindEvents() {
   el.prev.addEventListener("click", previousPage);
 
   el.back.addEventListener("click", () => {
-    window.location.href = "../library.html";
+    console.log("[Tafiya Reader] Back to Library — homepage link will be wired later.");
+    el.back.animate(
+      [
+        { transform: "scale(1)" },
+        { transform: "scale(0.94)" },
+        { transform: "scale(1)" }
+      ],
+      { duration: 220, easing: "ease" }
+    );
   });
 
   document.addEventListener("keydown", (e) => {
@@ -750,11 +765,11 @@ function bindEvents() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Render book                                                       */
+/*  Boot                                                              */
 /* ------------------------------------------------------------------ */
 
 function renderBook(pkg) {
-  bookPackage = pkg;
+  bookPackage = normalizeBookPackage(pkg);
   currentIndex = 0;
 
   buildScreens();
@@ -763,23 +778,21 @@ function renderBook(pkg) {
   renderScreen();
 }
 
-/* ------------------------------------------------------------------ */
-/*  Boot                                                              */
-/* ------------------------------------------------------------------ */
-
-document.addEventListener("DOMContentLoaded", async () => {
+async function boot() {
   cacheDom();
   bindEvents();
 
   const BOOK_CODE = getBookCodeFromUrl();
 
+  renderStatus("Loading book…", BOOK_CODE);
+
   try {
-    const realPackage = await fetchBookPackage(BOOK_CODE);
-    renderBook(realPackage);
-    console.log(`[Tafiya Reader] Loaded ${BOOK_CODE} from Supabase.`);
-  } catch (error) {
-    console.error("[Tafiya Reader] Supabase load failed:", error);
-    console.warn("[Tafiya Reader] Falling back to mock data.");
-    renderBook(getMockBookPackage(BOOK_CODE));
+    const pkg = await fetchBookPackage(BOOK_CODE);
+    renderBook(pkg);
+  } catch (err) {
+    console.error("[Tafiya Reader]", err);
+    renderStatus("Could not load book", err.message);
   }
-});
+}
+
+document.addEventListener("DOMContentLoaded", boot);
