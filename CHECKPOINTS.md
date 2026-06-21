@@ -144,3 +144,43 @@ Next planned step:
 
 Move the homepage book list out of index.html into a small catalog file later, or connect the homepage library to Supabase when the catalog fields are stable.
 
+## Checkpoint 5 — books.json Homepage Catalog Working
+
+Date: 2026-06-21
+
+Status: Working
+
+Confirmed:
+
+- Root homepage works:
+  - https://haaraya.github.io/tafiya-web-reader-test/
+
+- Homepage now loads book cards from:
+  - books.json
+
+- books.json works at:
+  - https://haaraya.github.io/tafiya-web-reader-test/books.json
+
+- Current catalog books:
+  - T4-NF-01 — How We Cook Jollof Rice
+  - T4-NF-02 — The Keke Napep
+
+- Homepage book buttons correctly open:
+  - /reader/?book=T4-NF-01
+  - /reader/?book=T4-NF-02
+
+- Reader route still works:
+  - https://haaraya.github.io/tafiya-web-reader-test/reader/?book=T4-NF-01
+  - https://haaraya.github.io/tafiya-web-reader-test/reader/?book=T4-NF-02
+
+- Homepage has a fallback book list if books.json fails.
+
+Current clean structure:
+
+root / = homepage  
+books.json = homepage catalog  
+/reader/ = book reader
+
+Next planned step:
+
+Add simple homepage library filtering by level/type only after more books exist.
