@@ -218,3 +218,36 @@ Confirmed:
 Next planned step:
 
 Load T4-F-03 into Supabase and turn it from coming_soon to available after the reader link works.
+
+## Checkpoint 7 — T4-F-03 Amina Goes to the Farm Working
+
+Date: 2026-06-21
+
+Status: Working
+
+Confirmed:
+
+- T4-F-03 — Amina Goes to the Farm is loaded in Supabase.
+
+- Storage images are in:
+  - book-assets/books/T4-F-03/
+
+- Database image paths were corrected to include:
+  - books/T4-F-03/
+
+- Direct reader link works:
+  - /reader/?book=T4-F-03
+
+- Homepage catalog was updated in books.json:
+  - T4-F-03 status changed from coming_soon to available
+  - reader_url changed to reader/?book=T4-F-03
+
+- Homepage now shows:
+  - T4-NF-01 — Read this book
+  - T4-NF-02 — Read this book
+  - T4-F-03 — Read this book
+  - T4-F-04 — Coming soon
+
+Next planned step:
+
+Load T4-F-04 — Come to the River into Supabase, test it directly in the reader, then change it from coming_soon to available in books.json.
