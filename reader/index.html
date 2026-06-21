@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tafiya Reader</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+  <!-- Cache-busted CSS -->
+  <link rel="stylesheet" href="reader.css?v=20260621-1">
+</head>
+
+<body>
+  <div class="reader" id="reader">
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="btn btn-ghost btn-back" id="backBtn" type="button">
+        <span class="ico" aria-hidden="true">‹</span>
+        <span>Library</span>
+      </button>
+
+      <div class="running" id="running">
+        <span class="running-title" id="runningTitle">&nbsp;</span>
+        <span class="running-level" id="runningLevel"></span>
+      </div>
+
+      <div class="brand" id="brand" aria-hidden="true"></div>
+    </header>
+
+    <!-- Reading stage — JS fills #book with the current screen -->
+    <main class="stage" id="stage" tabindex="-1">
+      <article class="book" id="book"></article>
+    </main>
+
+    <!-- Bottom navigation -->
+    <footer class="navbar">
+      <button class="btn btn-nav" id="prevBtn" type="button">
+        <span class="ico" aria-hidden="true">‹</span>
+        <span class="nav-label">Back</span>
+      </button>
+
+      <div class="progress" id="progress">
+        <span class="progress-text" id="progressText"></span>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+      </div>
+
+      <button class="btn btn-nav btn-next" id="nextBtn" type="button">
+        <span class="nav-label">Next</span>
+        <span class="ico" aria-hidden="true">›</span>
+      </button>
+    </footer>
+  </div>
+
+  <!-- Cache-busted JS -->
+  <script src="reader.js?v=20260621-1"></script>
+</body>
+</html>
