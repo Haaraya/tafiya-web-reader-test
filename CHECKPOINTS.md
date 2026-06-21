@@ -184,3 +184,37 @@ books.json = homepage catalog
 Next planned step:
 
 Add simple homepage library filtering by level/type only after more books exist.
+
+## Checkpoint 6 — Library Skeleton with Coming Soon Books Working
+
+Date: 2026-06-21
+
+Status: Working
+
+Confirmed:
+
+- Root homepage works:
+  - https://haaraya.github.io/tafiya-web-reader-test/
+
+- Homepage loads catalog from:
+  - books.json
+
+- Catalog now contains 4 books:
+  - T4-NF-01 — How We Cook Jollof Rice — available
+  - T4-NF-02 — The Keke Napep — available
+  - T4-F-03 — Amina Goes to the Farm — coming soon
+  - T4-F-04 — Come to the River — coming soon
+
+- Homepage correctly shows:
+  - available books with “Read this book”
+  - coming-soon books with “Coming soon”
+
+- Coming-soon books do not open broken reader links.
+
+- Reader route still works:
+  - /reader/?book=T4-NF-01
+  - /reader/?book=T4-NF-02
+
+Next planned step:
+
+Load T4-F-03 into Supabase and turn it from coming_soon to available after the reader link works.
