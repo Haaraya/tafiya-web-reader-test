@@ -22,3 +22,54 @@
     "reader_url": "reader/?book=T4-NF-02"
   }
 ]
+
+[
+  {
+    "book_code": "T4-NF-01",
+    "title": "How We Cook Jollof Rice",
+    "level_label": "Level 4",
+    "strand": "Tafiya",
+    "book_type": "Non-Fiction",
+    "short_description": "A familiar Nigerian food book built as a live Supabase-backed reader package.",
+    "featured": true,
+    "status": "available",
+    "sort_order": 1,
+    "reader_url": "reader/?book=T4-NF-01"
+  },
+  {
+    "book_code": "T4-NF-02",
+    "title": "The Keke Napep",
+    "level_label": "Level 4",
+    "strand": "Tafiya",
+    "book_type": "Non-Fiction",
+    "short_description": "A real-world transport book showing how everyday Nigerian topics become reading material.",
+    "featured": true,
+    "status": "available",
+    "sort_order": 2,
+    "reader_url": "reader/?book=T4-NF-02"
+  },
+  {
+    "book_code": "T4-F-03",
+    "title": "Amina Goes to the Farm",
+    "level_label": "Level 4",
+    "strand": "Tafiya",
+    "book_type": "Fiction",
+    "short_description": "A Level 4 Tafiya fiction reader waiting to be connected to the live reader.",
+    "featured": true,
+    "status": "coming_soon",
+    "sort_order": 3,
+    "reader_url": ""
+  },
+  {
+    "book_code": "T4-F-04",
+    "title": "Come to the River",
+    "level_label": "Level 4",
+    "strand": "Tafiya",
+    "book_type": "Fiction",
+    "short_description": "A Level 4 Tafiya fiction reader waiting to be connected to the live reader.",
+    "featured": true,
+    "status": "coming_soon",
+    "sort_order": 4,
+    "reader_url": ""
+  }
+]
