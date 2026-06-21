@@ -68,3 +68,43 @@ Confirmed:
 Next planned step:
 
 Clean up the repo gently and decide whether to remove the old root reader.css and reader.js files after confirming nothing depends on them.
+
+## Checkpoint 3 — Repo Cleanup Working
+
+Date: 2026-06-21
+
+Status: Working
+
+Confirmed:
+
+* Old root reader files were removed:
+
+  * old-root-reader.css
+  * old-root-reader.js
+
+* Root homepage still works:
+
+  * https://haaraya.github.io/tafiya-web-reader-test/
+
+* Reader route still works:
+
+  * https://haaraya.github.io/tafiya-web-reader-test/reader/?book=T4-NF-01
+  * https://haaraya.github.io/tafiya-web-reader-test/reader/?book=T4-NF-02
+
+* Final clean structure is now:
+
+root / = homepage
+/reader/ = book reader
+
+Current working files:
+
+* index.html
+* reader/index.html
+* reader/reader.css
+* reader/reader.js
+* CHECKPOINTS.md
+
+Next planned step:
+
+Connect the homepage/library area more cleanly to the future Haaraya website structure while keeping the reader stable.
+
