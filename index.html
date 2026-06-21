@@ -536,9 +536,7 @@
       text-decoration: none;
     }
 
-    .footer a:hover {
-      color: white;
-    }
+    .footer a:hover { color: white; }
 
     .copyright {
       max-width: 1160px;
@@ -555,35 +553,23 @@
         min-height: auto;
       }
 
-      .passport-stack {
-        min-height: 300px;
-      }
+      .passport-stack { min-height: 300px; }
 
       .journey-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .footer-inner {
-        grid-template-columns: 1fr;
-      }
+      .footer-inner { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
-      .nav {
-        min-height: 64px;
-      }
+      .nav { min-height: 64px; }
 
-      .brand-main {
-        font-size: 1.35rem;
-      }
+      .brand-main { font-size: 1.35rem; }
 
-      .brand-sub {
-        display: none;
-      }
+      .brand-sub { display: none; }
 
-      .nav-links a:not(.nav-cta) {
-        display: none;
-      }
+      .nav-links a:not(.nav-cta) { display: none; }
 
       .hero {
         border-radius: 22px;
@@ -596,33 +582,19 @@
         grid-template-columns: 1fr;
       }
 
-      .books {
-        grid-template-columns: 1fr;
-      }
+      .books { grid-template-columns: 1fr; }
 
-      .btn {
-        width: 100%;
-      }
+      .btn { width: 100%; }
 
-      .book-card .btn {
-        align-self: stretch;
-      }
+      .book-card .btn { align-self: stretch; }
 
-      .passport {
-        width: 190px;
-      }
+      .passport { width: 190px; }
 
-      .passport.green {
-        transform: rotate(-7deg) translateX(-24px);
-      }
+      .passport.green { transform: rotate(-7deg) translateX(-24px); }
 
-      .passport.orange {
-        transform: rotate(6deg) translate(36px, 30px);
-      }
+      .passport.orange { transform: rotate(6deg) translate(36px, 30px); }
 
-      .passport.blue {
-        transform: rotate(13deg) translate(58px, 76px);
-      }
+      .passport.blue { transform: rotate(13deg) translate(58px, 76px); }
     }
   </style>
 </head>
@@ -741,7 +713,7 @@
 
         <div class="books" id="bookGrid" aria-label="Available test books"></div>
 
-        <p class="status-note">
+        <p class="status-note" id="catalogStatus">
           Prototype status: homepage at root, reader at <strong>/reader/</strong>, book packages loaded
           from Supabase by <strong>book_code</strong>.
         </p>
@@ -780,25 +752,38 @@
   </footer>
 
   <script>
-    const BOOKS = [
+    const CATALOG_URL = "books.json";
+
+    const FALLBACK_BOOKS = [
       {
-        code: "T4-NF-01",
+        book_code: "T4-NF-01",
         title: "How We Cook Jollof Rice",
-        level: "Level 4",
-        strand: "Tafiya Non-Fiction",
-        description: "A familiar Nigerian food book built as a live Supabase-backed reader package."
+        level_label: "Level 4",
+        strand: "Tafiya",
+        book_type: "Non-Fiction",
+        short_description: "A familiar Nigerian food book built as a live Supabase-backed reader package.",
+        featured: true,
+        sort_order: 1,
+        reader_url: "reader/?book=T4-NF-01"
       },
       {
-        code: "T4-NF-02",
+        book_code: "T4-NF-02",
         title: "The Keke Napep",
-        level: "Level 4",
-        strand: "Tafiya Non-Fiction",
-        description: "A real-world transport book showing how everyday Nigerian topics become reading material."
+        level_label: "Level 4",
+        strand: "Tafiya",
+        book_type: "Non-Fiction",
+        short_description: "A real-world transport book showing how everyday Nigerian topics become reading material.",
+        featured: true,
+        sort_order: 2,
+        reader_url: "reader/?book=T4-NF-02"
       }
     ];
 
-    function readerHref(bookCode) {
-      return `reader/?book=${encodeURIComponent(bookCode)}`;
+    let books = [];
+
+    function readerHref(book) {
+      if (book.reader_url) return book.reader_url;
+      return `reader/?book=${encodeURIComponent(book.book_code)}`;
     }
 
     function bookCountText(count) {
@@ -819,19 +804,66 @@
       return words[count] || String(count);
     }
 
+    function cleanBookList(rawBooks) {
+      if (!Array.isArray(rawBooks)) return [];
+
+      return rawBooks
+        .filter((book) => book && book.book_code && book.title)
+        .filter((book) => book.featured !== false)
+        .sort((a, b) => {
+          const aa = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : 9999;
+          const bb = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : 9999;
+          return aa - bb || String(a.title).localeCompare(String(b.title));
+        });
+    }
+
+    async function loadBooks() {
+      try {
+        const response = await fetch(`${CATALOG_URL}?v=${Date.now()}`, {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Catalog failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const cleaned = cleanBookList(data);
+
+        if (!cleaned.length) {
+          throw new Error("Catalog loaded but no usable books were found.");
+        }
+
+        setCatalogStatus("Catalog loaded from books.json.");
+        return cleaned;
+      } catch (error) {
+        console.warn("[Haaraya homepage] Using fallback book list.", error);
+        setCatalogStatus("Catalog fallback is active. books.json could not be loaded.");
+        return cleanBookList(FALLBACK_BOOKS);
+      }
+    }
+
+    function setCatalogStatus(message) {
+      const status = document.getElementById("catalogStatus");
+      if (!status) return;
+
+      status.innerHTML =
+        `${message} Reader remains at <strong>/reader/</strong> and uses <strong>book_code</strong>.`;
+    }
+
     function renderBookCards() {
       const grid = document.getElementById("bookGrid");
       if (!grid) return;
 
       grid.innerHTML = "";
 
-      BOOKS.forEach((book) => {
+      books.forEach((book) => {
         const card = document.createElement("article");
         card.className = "book-card";
 
         const meta = document.createElement("div");
         meta.className = "book-meta";
-        meta.textContent = `${book.level} · ${book.strand}`;
+        meta.textContent = `${book.level_label || "Level"} · ${book.strand || "Tafiya"} ${book.book_type || ""}`.trim();
 
         const title = document.createElement("h3");
         title.className = "book-title";
@@ -839,15 +871,15 @@
 
         const desc = document.createElement("p");
         desc.className = "book-desc";
-        desc.textContent = book.description;
+        desc.textContent = book.short_description || "A Haaraya Literacy reader.";
 
         const code = document.createElement("div");
         code.className = "book-code";
-        code.textContent = book.code;
+        code.textContent = book.book_code;
 
         const link = document.createElement("a");
         link.className = "btn btn-primary";
-        link.href = readerHref(book.code);
+        link.href = readerHref(book);
         link.textContent = "Read this book →";
 
         card.appendChild(meta);
@@ -866,11 +898,11 @@
 
       list.innerHTML = "";
 
-      BOOKS.forEach((book) => {
+      books.forEach((book) => {
         const item = document.createElement("li");
         const link = document.createElement("a");
 
-        link.href = readerHref(book.code);
+        link.href = readerHref(book);
         link.textContent = book.title;
 
         item.appendChild(link);
@@ -879,11 +911,11 @@
     }
 
     function wireFirstBookLinks() {
-      const firstBook = BOOKS[0];
+      const firstBook = books[0];
       if (!firstBook) return;
 
       document.querySelectorAll("[data-first-book-link]").forEach((link) => {
-        link.href = readerHref(firstBook.code);
+        link.href = readerHref(firstBook);
       });
     }
 
@@ -891,10 +923,12 @@
       const count = document.getElementById("bookCount");
       if (!count) return;
 
-      count.textContent = bookCountText(BOOKS.length);
+      count.textContent = bookCountText(books.length);
     }
 
-    function bootHomepage() {
+    async function bootHomepage() {
+      books = await loadBooks();
+
       wireFirstBookLinks();
       updateBookCount();
       renderBookCards();
