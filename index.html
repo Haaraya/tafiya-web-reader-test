@@ -223,7 +223,7 @@
       font-weight: 700;
       text-decoration: none;
       border: 2px solid transparent;
-      transition: transform 0.12s ease, background 0.16s ease, border-color 0.16s ease;
+      transition: transform 0.12s ease, background 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
     }
 
     .btn:active { transform: translateY(1px) scale(0.99); }
@@ -245,6 +245,14 @@
     .btn-outline:hover {
       border-color: white;
       background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-disabled {
+      background: #e7dfcf;
+      color: #726a5b;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.95;
     }
 
     .passport-stack {
@@ -400,6 +408,23 @@
       border-radius: 28px;
     }
 
+    .library-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .summary-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--line);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--green-800);
+    }
+
     .strand-strip {
       display: flex;
       flex-wrap: wrap;
@@ -442,6 +467,14 @@
       background: rgba(246, 195, 50, 0.16);
     }
 
+    .book-card.is-coming-soon {
+      opacity: 0.88;
+    }
+
+    .book-card.is-coming-soon::after {
+      background: rgba(95, 98, 92, 0.12);
+    }
+
     .book-meta {
       width: fit-content;
       padding: 7px 11px;
@@ -452,6 +485,28 @@
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+    }
+
+    .book-status {
+      position: relative;
+      z-index: 1;
+      width: fit-content;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .book-status.is-available {
+      background: rgba(22, 131, 47, 0.12);
+      color: var(--green-800);
+    }
+
+    .book-status.is-coming-soon {
+      background: rgba(95, 98, 92, 0.12);
+      color: var(--muted);
     }
 
     .book-title {
@@ -641,7 +696,7 @@
         <div class="passport blue">
           <small>Level 4</small>
           <strong>Tafiya</strong>
-          <span>Non-Fiction</span>
+          <span>Fiction + Non-Fiction</span>
         </div>
 
         <div class="passport orange">
@@ -697,11 +752,17 @@
       <div class="section-kicker">The Library</div>
       <h2 class="section-heading">Explore the Haaraya reading journey.</h2>
       <p class="section-copy">
-        For now, this prototype keeps the library small and honest:
-        <span id="bookCount">two</span> working Level 4 Tafiya Non-Fiction books connected to the live reader.
+        The library skeleton now shows <span id="availableCount">two</span> available books
+        and <span id="comingSoonCount">two</span> coming soon.
       </p>
 
       <div class="library-panel">
+        <div class="library-summary">
+          <span class="summary-pill" id="totalBooksPill">4 catalog books</span>
+          <span class="summary-pill" id="availableBooksPill">2 available</span>
+          <span class="summary-pill" id="comingSoonBooksPill">2 coming soon</span>
+        </div>
+
         <div class="strand-strip" aria-label="Future Haaraya strands">
           <span class="strand-tag">Hafwas</span>
           <span class="strand-tag">Soundables</span>
@@ -711,7 +772,7 @@
           <span class="strand-tag">Poetry</span>
         </div>
 
-        <div class="books" id="bookGrid" aria-label="Available test books"></div>
+        <div class="books" id="bookGrid" aria-label="Available and upcoming test books"></div>
 
         <p class="status-note" id="catalogStatus">
           Prototype status: homepage at root, reader at <strong>/reader/</strong>, book packages loaded
@@ -741,7 +802,7 @@
       </section>
 
       <section>
-        <strong>Current test books</strong>
+        <strong>Current catalog</strong>
         <ul id="footerBookList"></ul>
       </section>
     </div>
@@ -763,6 +824,7 @@
         book_type: "Non-Fiction",
         short_description: "A familiar Nigerian food book built as a live Supabase-backed reader package.",
         featured: true,
+        status: "available",
         sort_order: 1,
         reader_url: "reader/?book=T4-NF-01"
       },
@@ -774,16 +836,48 @@
         book_type: "Non-Fiction",
         short_description: "A real-world transport book showing how everyday Nigerian topics become reading material.",
         featured: true,
+        status: "available",
         sort_order: 2,
         reader_url: "reader/?book=T4-NF-02"
+      },
+      {
+        book_code: "T4-F-03",
+        title: "Amina Goes to the Farm",
+        level_label: "Level 4",
+        strand: "Tafiya",
+        book_type: "Fiction",
+        short_description: "A Level 4 Tafiya fiction reader waiting to be connected to the live reader.",
+        featured: true,
+        status: "coming_soon",
+        sort_order: 3,
+        reader_url: ""
+      },
+      {
+        book_code: "T4-F-04",
+        title: "Come to the River",
+        level_label: "Level 4",
+        strand: "Tafiya",
+        book_type: "Fiction",
+        short_description: "A Level 4 Tafiya fiction reader waiting to be connected to the live reader.",
+        featured: true,
+        status: "coming_soon",
+        sort_order: 4,
+        reader_url: ""
       }
     ];
 
     let books = [];
 
+    function isAvailable(book) {
+      return String(book.status || "available").toLowerCase() === "available";
+    }
+
     function readerHref(book) {
       if (book.reader_url) return book.reader_url;
-      return `reader/?book=${encodeURIComponent(book.book_code)}`;
+      if (isAvailable(book) && book.book_code) {
+        return `reader/?book=${encodeURIComponent(book.book_code)}`;
+      }
+      return "";
     }
 
     function bookCountText(count) {
@@ -848,7 +942,7 @@
       if (!status) return;
 
       status.innerHTML =
-        `${message} Reader remains at <strong>/reader/</strong> and uses <strong>book_code</strong>.`;
+        `${message} Available books open in <strong>/reader/</strong>. Coming-soon books are shown but not linked yet.`;
     }
 
     function renderBookCards() {
@@ -858,8 +952,15 @@
       grid.innerHTML = "";
 
       books.forEach((book) => {
+        const available = isAvailable(book);
+        const href = readerHref(book);
+
         const card = document.createElement("article");
-        card.className = "book-card";
+        card.className = "book-card" + (available ? "" : " is-coming-soon");
+
+        const status = document.createElement("div");
+        status.className = "book-status " + (available ? "is-available" : "is-coming-soon");
+        status.textContent = available ? "Available" : "Coming soon";
 
         const meta = document.createElement("div");
         meta.className = "book-meta";
@@ -877,16 +978,25 @@
         code.className = "book-code";
         code.textContent = book.book_code;
 
-        const link = document.createElement("a");
-        link.className = "btn btn-primary";
-        link.href = readerHref(book);
-        link.textContent = "Read this book →";
-
+        card.appendChild(status);
         card.appendChild(meta);
         card.appendChild(title);
         card.appendChild(desc);
         card.appendChild(code);
-        card.appendChild(link);
+
+        if (available && href) {
+          const link = document.createElement("a");
+          link.className = "btn btn-primary";
+          link.href = href;
+          link.textContent = "Read this book →";
+          card.appendChild(link);
+        } else {
+          const locked = document.createElement("span");
+          locked.className = "btn btn-disabled";
+          locked.setAttribute("aria-disabled", "true");
+          locked.textContent = "Coming soon";
+          card.appendChild(locked);
+        }
 
         grid.appendChild(card);
       });
@@ -900,37 +1010,56 @@
 
       books.forEach((book) => {
         const item = document.createElement("li");
-        const link = document.createElement("a");
+        const href = readerHref(book);
 
-        link.href = readerHref(book);
-        link.textContent = book.title;
+        if (isAvailable(book) && href) {
+          const link = document.createElement("a");
+          link.href = href;
+          link.textContent = book.title;
+          item.appendChild(link);
+        } else {
+          item.textContent = `${book.title} — coming soon`;
+        }
 
-        item.appendChild(link);
         list.appendChild(item);
       });
     }
 
     function wireFirstBookLinks() {
-      const firstBook = books[0];
-      if (!firstBook) return;
+      const firstAvailable = books.find((book) => isAvailable(book) && readerHref(book));
+      if (!firstAvailable) return;
 
       document.querySelectorAll("[data-first-book-link]").forEach((link) => {
-        link.href = readerHref(firstBook);
+        link.href = readerHref(firstAvailable);
       });
     }
 
-    function updateBookCount() {
-      const count = document.getElementById("bookCount");
-      if (!count) return;
+    function updateCounts() {
+      const total = books.length;
+      const available = books.filter(isAvailable).length;
+      const comingSoon = total - available;
 
-      count.textContent = bookCountText(books.length);
+      const availableText = bookCountText(available);
+      const comingText = bookCountText(comingSoon);
+
+      const availableCount = document.getElementById("availableCount");
+      const comingSoonCount = document.getElementById("comingSoonCount");
+      const totalBooksPill = document.getElementById("totalBooksPill");
+      const availableBooksPill = document.getElementById("availableBooksPill");
+      const comingSoonBooksPill = document.getElementById("comingSoonBooksPill");
+
+      if (availableCount) availableCount.textContent = availableText;
+      if (comingSoonCount) comingSoonCount.textContent = comingText;
+      if (totalBooksPill) totalBooksPill.textContent = `${total} catalog books`;
+      if (availableBooksPill) availableBooksPill.textContent = `${available} available`;
+      if (comingSoonBooksPill) comingSoonBooksPill.textContent = `${comingSoon} coming soon`;
     }
 
     async function bootHomepage() {
       books = await loadBooks();
 
       wireFirstBookLinks();
-      updateBookCount();
+      updateCounts();
       renderBookCards();
       renderFooterBooks();
     }
