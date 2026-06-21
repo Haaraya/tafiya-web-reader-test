@@ -36,15 +36,15 @@
     "reader_url": "reader/?book=T4-F-03"
   },
   {
-    "book_code": "T4-F-04",
-    "title": "Come to the River",
-    "level_label": "Level 4",
-    "strand": "Tafiya",
-    "book_type": "Fiction",
-    "short_description": "A Level 4 Tafiya fiction reader waiting to be connected to the live reader.",
-    "featured": true,
-    "status": "coming_soon",
-    "sort_order": 4,
-    "reader_url": ""
-  }
+  "book_code": "T4-F-04",
+  "title": "Come to the River",
+  "level_label": "Level 4",
+  "strand": "Tafiya",
+  "book_type": "Fiction",
+  "short_description": "Naza leads her friends beyond the estate to discover a river, a kingfisher, and a place that was there all along.",
+  "featured": true,
+  "status": "available",
+  "sort_order": 4,
+  "reader_url": "reader/?book=T4-F-04"
+}
 ]
