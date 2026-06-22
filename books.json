@@ -5,7 +5,7 @@
     "level_label": "Level 4",
     "strand": "Tafiya",
     "book_type": "Non-Fiction",
-    "short_description": "A familiar Nigerian food book built as a live Supabase-backed reader package.",
+    "short_description": "Jollof rice is loved across Nigeria. Follow each step — from blending the tomatoes to lifting the lid — and learn how to make one of Nigeria's greatest dishes.",
     "featured": true,
     "status": "available",
     "sort_order": 1,
@@ -17,7 +17,7 @@
     "level_label": "Level 4",
     "strand": "Tafiya",
     "book_type": "Non-Fiction",
-    "short_description": "A real-world transport book showing how everyday Nigerian topics become reading material.",
+    "short_description": "The keke napep is one of Nigeria's busiest vehicles. Find out where it came from, how it works, and why keke drivers know their neighbourhoods better than anyone.",
     "featured": true,
     "status": "available",
     "sort_order": 2,
@@ -29,22 +29,22 @@
     "level_label": "Level 4",
     "strand": "Tafiya",
     "book_type": "Fiction",
-    "short_description": "Amina goes to the farm for harvest day and learns how hard, joyful, and important farm work can be.",
+    "short_description": "It is harvest day and Amina wakes before sunrise to go to the farm for the very first time. She works hard all morning and learns something important about where food comes from.",
     "featured": true,
     "status": "available",
     "sort_order": 3,
     "reader_url": "reader/?book=T4-F-03"
   },
   {
-  "book_code": "T4-F-04",
-  "title": "Come to the River",
-  "level_label": "Level 4",
-  "strand": "Tafiya",
-  "book_type": "Fiction",
-  "short_description": "Naza leads her friends beyond the estate to discover a river, a kingfisher, and a place that was there all along.",
-  "featured": true,
-  "status": "available",
-  "sort_order": 4,
-  "reader_url": "reader/?book=T4-F-04"
-}
+    "book_code": "T4-F-04",
+    "title": "Come to the River",
+    "level_label": "Level 4",
+    "strand": "Tafiya",
+    "book_type": "Fiction",
+    "short_description": "Naza leads Emeka and Ada to a place she has always known — a river just beyond the estate. A story about friendship, a kingfisher, and the things that are always there if you look.",
+    "featured": true,
+    "status": "available",
+    "sort_order": 4,
+    "reader_url": "reader/?book=T4-F-04"
+  }
 ]
