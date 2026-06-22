@@ -4,47 +4,117 @@
     "title": "How We Cook Jollof Rice",
     "level_label": "Level 4",
     "strand": "Tafiya",
-    "book_type": "Non-Fiction",
+    "book_type": "non-fiction",
     "short_description": "Jollof rice is loved across Nigeria. Follow each step — from blending the tomatoes to lifting the lid — and learn how to make one of Nigeria's greatest dishes.",
     "featured": true,
-    "status": "available",
+    "status": "approved",
     "sort_order": 1,
-    "reader_url": "reader/?book=T4-NF-01"
+    "reader_url": "reader/?book=T4-NF-01",
+    "code": "T4-NF-01",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "cover_image_path": "books/T4-NF-01/T4-NF-01_FC.png"
   },
   {
     "book_code": "T4-NF-02",
     "title": "The Keke Napep",
     "level_label": "Level 4",
     "strand": "Tafiya",
-    "book_type": "Non-Fiction",
+    "book_type": "non-fiction",
     "short_description": "The keke napep is one of Nigeria's busiest vehicles. Find out where it came from, how it works, and why keke drivers know their neighbourhoods better than anyone.",
     "featured": true,
-    "status": "available",
+    "status": "approved",
     "sort_order": 2,
-    "reader_url": "reader/?book=T4-NF-02"
+    "reader_url": "reader/?book=T4-NF-02",
+    "code": "T4-NF-02",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "cover_image_path": "books/T4-NF-02/T4-NF-02_FC.png"
   },
   {
     "book_code": "T4-F-03",
     "title": "Amina Goes to the Farm",
     "level_label": "Level 4",
     "strand": "Tafiya",
-    "book_type": "Fiction",
+    "book_type": "fiction",
     "short_description": "It is harvest day and Amina wakes before sunrise to go to the farm for the very first time. She works hard all morning and learns something important about where food comes from.",
     "featured": true,
-    "status": "available",
+    "status": "approved",
     "sort_order": 3,
-    "reader_url": "reader/?book=T4-F-03"
+    "reader_url": "reader/?book=T4-F-03",
+    "code": "T4-F-03",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "cover_image_path": "books/T4-F-03/T4-F-03_FC.png"
   },
   {
     "book_code": "T4-F-04",
     "title": "Come to the River",
     "level_label": "Level 4",
     "strand": "Tafiya",
-    "book_type": "Fiction",
+    "book_type": "fiction",
     "short_description": "Naza leads Emeka and Ada to a place she has always known — a river just beyond the estate. A story about friendship, a kingfisher, and the things that are always there if you look.",
     "featured": true,
-    "status": "available",
+    "status": "approved",
     "sort_order": 4,
-    "reader_url": "reader/?book=T4-F-04"
+    "reader_url": "reader/?book=T4-F-04",
+    "code": "T4-F-04",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "cover_image_path": "books/T4-F-04/T4-F-04_FC.png"
+  },
+  {
+    "code": "T4-F-01",
+    "title": "Emeka's Big Day",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "book_type": "fiction",
+    "status": "approved",
+    "cover_image_path": "books/T4-F-01/T4-F-01_FC.png"
+  },
+  {
+    "code": "T4-F-02",
+    "title": "Who Has the Drum?",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "book_type": "fiction",
+    "status": "approved",
+    "cover_image_path": "books/T4-F-02/T4-F-02_FC.png"
+  },
+  {
+    "code": "T4-F-05",
+    "title": "Ada and the Crab",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "book_type": "fiction",
+    "status": "approved",
+    "cover_image_path": "books/T4-F-05/T4-F-05_FC.png"
+  },
+  {
+    "code": "T4-FT-01",
+    "title": "How Anansi Got All the Stories",
+    "level": "Level 4",
+    "tafiya_name": "Tafiya",
+    "book_type": "folktale",
+    "status": "approved",
+    "cover_image_path": "books/T4-FT-01/T4-FT-01_FC.png"
+  },
+  {
+    "code": "T3-NF-01",
+    "title": "How We Get Water",
+    "level": "Level 3",
+    "tafiya_name": "Hanya",
+    "book_type": "non-fiction",
+    "status": "approved",
+    "cover_image_path": "books/T3-NF-01/T3-NF-01_FC.png"
+  },
+  {
+    "code": "T3-NF-02",
+    "title": "What Farmers Grow",
+    "level": "Level 3",
+    "tafiya_name": "Hanya",
+    "book_type": "non-fiction",
+    "status": "approved",
+    "cover_image_path": "books/T3-NF-02/T3-NF-02_FC.png"
   }
 ]
