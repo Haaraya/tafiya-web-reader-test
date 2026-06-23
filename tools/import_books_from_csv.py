@@ -11,12 +11,13 @@ What it does:
 - Upserts safe books into Supabase
 - Replaces old pages/skills for each imported book
 - Updates books.json for the library
+- Preserves/adds thumbnail_image_path for library cards
 
 Run dry first:
-python tools/import_books_from_csv.py --dry-run --image-root "C:\\path\\to\\generated-images"
+python tools/import_books_from_csv.py --dry-run --image-root "C:\\path\\to\\usable-images"
 
 Then real import:
-python tools/import_books_from_csv.py --image-root "C:\\path\\to\\generated-images"
+python tools/import_books_from_csv.py --image-root "C:\\path\\to\\usable-images"
 """
 
 import argparse
@@ -36,6 +37,7 @@ DEFAULT_PAGES_CSV = "import_sources/Tafiya_Pages_Merge.csv"
 DEFAULT_BACK_CSV = "import_sources/Tafiya_BackCover_Merge.csv"
 DEFAULT_BOOKS_JSON = "books.json"
 DEFAULT_BUCKET = "book-assets"
+DEFAULT_THUMBNAIL_ROOT = "thumbnails/covers"
 
 BOOK_TYPE_LABELS = {
     "F": "Fiction",
@@ -82,14 +84,6 @@ def read_csv_rows(path):
 
 
 def parse_book_code(code):
-    """
-    Expected examples:
-    T4-NF-01
-    T4-F-03
-    T1-C-02
-    T4-FT-01
-    T4-P-01
-    """
     code = clean(code)
     match = re.match(r"^T(\d+)-([A-Z]+)-(\d+)$", code)
     if not match:
@@ -180,7 +174,6 @@ def find_case_insensitive_file(path):
 
 def image_candidates(image_root, csv_image_path, book_code, suffix):
     candidates = []
-
     names = [f"{book_code}_{suffix}{ext}" for ext in IMAGE_EXTENSIONS]
 
     if suffix == "FC":
@@ -208,6 +201,34 @@ def find_image(image_root, csv_image_path, book_code, suffix):
         if found:
             return found
     return None
+
+
+def safe_filename_title(title):
+    safe = clean(title)
+    safe = re.sub(r'[\\/:*?"<>|]', "", safe)
+    safe = re.sub(r"\s+", "_", safe)
+    safe = re.sub(r"_+", "_", safe).strip("_")
+    return safe
+
+
+def find_thumbnail_path(book_code, title, thumbnail_root):
+    root = Path(thumbnail_root)
+
+    if not root.exists():
+        return ""
+
+    matches = sorted(root.glob(f"{book_code}_*_fc.jpg"))
+
+    if matches:
+        return (root / matches[0].name).as_posix()
+
+    safe_title = safe_filename_title(title)
+    if safe_title:
+        expected = root / f"{book_code}_{safe_title}_fc.jpg"
+        if expected.exists():
+            return expected.as_posix()
+
+    return ""
 
 
 def index_single(rows, key_name):
@@ -495,25 +516,54 @@ class SupabaseClient:
         return book_id
 
 
-def build_books_json_payload(imported_books, existing_payload):
+def existing_books_by_code(existing_payload):
+    if isinstance(existing_payload, dict):
+        books = existing_payload.get("books", [])
+    elif isinstance(existing_payload, list):
+        books = existing_payload
+    else:
+        books = []
+
+    result = {}
+    for book in books:
+        code = clean(book.get("book_code") or book.get("code"))
+        if code:
+            result[code] = book
+
+    return result
+
+
+def build_books_json_payload(imported_books, existing_payload, thumbnail_root):
+    existing_by_code = existing_books_by_code(existing_payload)
     library_books = []
 
     for book in imported_books:
         code = book["book_code"]
-        library_books.append(
-            {
-                "book_code": code,
-                "code": code,
-                "title": book["title"],
-                "level": book["level"],
-                "tafiya_name": book["tafiya_name"],
-                "level_name": book["tafiya_name"],
-                "book_type": book["book_type"],
-                "cover_image_path": book["cover_image_path"],
-                "href": f"reader/index.html?book={code}",
-                "reader_url": f"reader/index.html?book={code}",
-            }
+        existing = existing_by_code.get(code, {})
+
+        row = {
+            "book_code": code,
+            "code": code,
+            "title": book["title"],
+            "strand": book["strand"],
+            "level": book["level"],
+            "tafiya_name": book["tafiya_name"],
+            "level_name": book["tafiya_name"],
+            "book_type": book["book_type"],
+            "cover_image_path": book["cover_image_path"],
+            "href": f"reader/index.html?book={code}",
+            "reader_url": f"reader/index.html?book={code}",
+        }
+
+        thumbnail_path = (
+            find_thumbnail_path(code, book["title"], thumbnail_root)
+            or clean(existing.get("thumbnail_image_path"))
         )
+
+        if thumbnail_path:
+            row["thumbnail_image_path"] = thumbnail_path
+
+        library_books.append(row)
 
     if isinstance(existing_payload, dict):
         existing_payload["books"] = library_books
@@ -522,7 +572,7 @@ def build_books_json_payload(imported_books, existing_payload):
     return library_books
 
 
-def write_books_json(path, imported_books):
+def write_books_json(path, imported_books, thumbnail_root):
     path = Path(path)
 
     existing_payload = None
@@ -532,7 +582,7 @@ def write_books_json(path, imported_books):
         except json.JSONDecodeError:
             existing_payload = None
 
-    payload = build_books_json_payload(imported_books, existing_payload)
+    payload = build_books_json_payload(imported_books, existing_payload, thumbnail_root)
 
     path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
@@ -570,6 +620,7 @@ def main():
     parser.add_argument("--back-csv", default=DEFAULT_BACK_CSV)
     parser.add_argument("--books-json", default=DEFAULT_BOOKS_JSON)
     parser.add_argument("--image-root", default="")
+    parser.add_argument("--thumbnail-root", default=DEFAULT_THUMBNAIL_ROOT)
     parser.add_argument("--bucket", default=DEFAULT_BUCKET)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-books-json", action="store_true")
@@ -647,7 +698,12 @@ def main():
         print("Safe books:")
         for item in prepared_books:
             book = item["book"]
-            print(f"  - {book['book_code']} | {book['title']} | Level {book['level']} | {book['book_type']}")
+            thumb = find_thumbnail_path(book["book_code"], book["title"], args.thumbnail_root)
+            thumb_note = "thumbnail found" if thumb else "no thumbnail"
+            print(
+                f"  - {book['book_code']} | {book['title']} | "
+                f"Level {book['level']} | {book['book_type']} | {thumb_note}"
+            )
         print("")
 
     if args.dry_run:
@@ -694,7 +750,7 @@ def main():
                 sys.exit(1)
 
     if imported_books and not args.no_books_json:
-        write_books_json(args.books_json, imported_books)
+        write_books_json(args.books_json, imported_books, args.thumbnail_root)
         print("")
         print(f"Updated {args.books_json} with {len(imported_books)} imported books.")
 
