@@ -21,6 +21,12 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_qW4msFbGQ9QuqIZ6-G8QfA_JY_pvcsY
 
 const STORAGE_BUCKET = "book-assets";
 
+const DEFAULT_LOGOS = {
+  tafiya: "logos/tafiya_logo.png",
+  haaraya_literacy: "logos/haaraya_literacy_logo.png",
+  haaraya_education: "logos/haaraya_education_logo_transparent.png"
+};
+
 function getBookCodeFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("book") || "T4-NF-01";
@@ -88,7 +94,10 @@ function normalizeBookPackage(data) {
   pkg.pages = Array.isArray(pkg.pages) ? pkg.pages : [];
   pkg.skills = pkg.skills || {};
   pkg.assets = pkg.assets || {};
-  pkg.assets.logos = pkg.assets.logos || {};
+  pkg.assets.logos = {
+    ...DEFAULT_LOGOS,
+    ...(pkg.assets.logos || {})
+  };
 
   if (!pkg.book.book_code) {
     pkg.book.book_code = getBookCodeFromUrl();
@@ -197,7 +206,7 @@ function topMetaLabel(book) {
 
 function logoPath(key) {
   const logos = (bookPackage.assets && bookPackage.assets.logos) || {};
-  return logos[key] || "";
+  return logos[key] || DEFAULT_LOGOS[key] || "";
 }
 
 function logoImg(path, cls) {
