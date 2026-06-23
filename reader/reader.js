@@ -16,27 +16,15 @@
    Never use sb_secret_ keys in this file.
    ============================================================ */
 
-/* ------------------------------------------------------------------ */
-/*  Supabase config                                                   */
-/* ------------------------------------------------------------------ */
-
 const SUPABASE_URL = "https://laihhrkxnxzohaiiisou.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_qW4msFbGQ9QuqIZ6-G8QfA_JY_pvcsY";
 
 const STORAGE_BUCKET = "book-assets";
 
-/* ------------------------------------------------------------------ */
-/*  URL → book_code                                                   */
-/* ------------------------------------------------------------------ */
-
 function getBookCodeFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("book") || "T4-NF-01";
 }
-
-/* ------------------------------------------------------------------ */
-/*  Supabase fetch                                                    */
-/* ------------------------------------------------------------------ */
 
 function supabaseIsConfigured() {
   return (
@@ -50,9 +38,7 @@ function supabaseIsConfigured() {
 
 async function fetchBookPackage(bookCode) {
   if (!supabaseIsConfigured()) {
-    throw new Error(
-      "Supabase is not configured. Paste your Supabase URL and publishable key at the top of reader.js."
-    );
+    throw new Error("Supabase is not configured.");
   }
 
   const endpoint = `${SUPABASE_URL}/rest/v1/rpc/get_book_package`;
@@ -82,17 +68,14 @@ async function fetchBookPackage(bookCode) {
 function normalizeBookPackage(data) {
   let pkg = data;
 
-  // RPC may return [{...}]
   if (Array.isArray(pkg)) {
     pkg = pkg[0];
   }
 
-  // RPC may return { get_book_package: {...} }
   if (pkg && pkg.get_book_package) {
     pkg = pkg.get_book_package;
   }
 
-  // Defensive wrapper support
   if (pkg && pkg.data && pkg.data.book) {
     pkg = pkg.data;
   }
@@ -114,13 +97,6 @@ function normalizeBookPackage(data) {
   return pkg;
 }
 
-/* Resolve a stored path to a usable URL.
-   Supports:
-   - full https:// URLs
-   - /storage/v1/object/public/book-assets/...
-   - book-assets/...
-   - plain paths like T4-NF-01/page-01.png
-*/
 function assetUrl(path) {
   if (!path) return "";
 
@@ -151,10 +127,6 @@ function assetUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${clean}`;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Reader state + DOM                                                */
-/* ------------------------------------------------------------------ */
-
 let bookPackage = null;
 let screens = [];
 let currentIndex = 0;
@@ -164,19 +136,15 @@ const el = {};
 function cacheDom() {
   el.runTitle = document.getElementById("runningTitle");
   el.runLevel = document.getElementById("runningLevel");
-  el.brand    = document.getElementById("brand");
-  el.book     = document.getElementById("book");
-  el.surface  = null;
-  el.prev     = document.getElementById("prevBtn");
-  el.next     = document.getElementById("nextBtn");
-  el.back     = document.getElementById("backBtn");
-  el.progTxt  = document.getElementById("progressText");
-  el.dots     = document.getElementById("dots");
+  el.brand = document.getElementById("brand");
+  el.book = document.getElementById("book");
+  el.surface = null;
+  el.prev = document.getElementById("prevBtn");
+  el.next = document.getElementById("nextBtn");
+  el.back = document.getElementById("backBtn");
+  el.progTxt = document.getElementById("progressText");
+  el.dots = document.getElementById("dots");
 }
-
-/* ------------------------------------------------------------------ */
-/*  Small DOM helpers                                                 */
-/* ------------------------------------------------------------------ */
 
 function makeEl(tag, cls, text) {
   const e = document.createElement(tag);
@@ -204,7 +172,6 @@ function bookTypeLabel(value) {
     .trim();
 }
 
-/* Prevents "Level Level 4". */
 function levelLabel(lvl) {
   const s = textValue(lvl);
   if (!s) return "";
@@ -304,10 +271,6 @@ function sectionTitle(text) {
   return makeEl("div", "back-section-title", text);
 }
 
-/* ------------------------------------------------------------------ */
-/*  Status / error screen                                             */
-/* ------------------------------------------------------------------ */
-
 function renderStatus(title, detail) {
   if (!el.book) return;
 
@@ -343,10 +306,6 @@ function renderStatus(title, detail) {
   if (el.next) el.next.disabled = true;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Render: book metadata                                             */
-/* ------------------------------------------------------------------ */
-
 function renderBookMeta() {
   const b = bookPackage.book || {};
 
@@ -366,10 +325,6 @@ function renderBookMeta() {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Screen list: cover → pages → back                                 */
-/* ------------------------------------------------------------------ */
-
 function buildScreens() {
   screens = [{ type: "cover" }];
 
@@ -381,10 +336,6 @@ function buildScreens() {
 
   screens.push({ type: "back" });
 }
-
-/* ------------------------------------------------------------------ */
-/*  Render current screen                                             */
-/* ------------------------------------------------------------------ */
 
 function renderScreen() {
   const s = screens[currentIndex];
@@ -416,10 +367,6 @@ function renderScreen() {
   updateNav();
   saveProgress();
 }
-
-/* ------------------------------------------------------------------ */
-/*  Cover                                                             */
-/* ------------------------------------------------------------------ */
 
 function renderCover() {
   const b = bookPackage.book || {};
@@ -464,10 +411,6 @@ function renderCover() {
   el.surface.appendChild(bottom);
 }
 
-/* ------------------------------------------------------------------ */
-/*  Story page                                                        */
-/* ------------------------------------------------------------------ */
-
 function renderPage(page) {
   const imgWrap = makeEl("div", "story-img");
   imageInto(imgWrap, page.image_path, `illustration · page ${page.page_number}`);
@@ -485,15 +428,10 @@ function renderPage(page) {
   el.surface.appendChild(txt);
 }
 
-/* ------------------------------------------------------------------ */
-/*  Back cover                                                        */
-/* ------------------------------------------------------------------ */
-
 function renderBack() {
   const b = bookPackage.book || {};
   const s = bookPackage.skills || {};
   const type = bookTypeLabel(b.book_type);
-  const isNonFiction = /non[-\s]?fiction/i.test(type);
 
   const skillsBlock = makeEl("div", "skills-block");
 
@@ -505,25 +443,14 @@ function renderBack() {
 
   const table = makeEl("div", "skills-table");
 
-  const rows = isNonFiction
-    ? [
-        ["Topic", s.topic || b.topic],
-        ["Text Structure", s.text_structure],
-        ["Reading Strategy", s.reading_strategy],
-        ["Comprehension Skill", s.comprehension_skill],
-        ["Grammar and Mechanics", s.grammar_mechanics],
-        ["Word Work", s.word_work],
-        ["Key Vocabulary", s.key_vocabulary],
-        ["Word Count", s.total_word_count]
-      ]
-    : [
-        ["Reading Strategy", s.reading_strategy],
-        ["Comprehension Skill", s.comprehension_skill],
-        ["Phonological Awareness", s.phonological_awareness],
-        ["Grammar and Mechanics", s.grammar_mechanics],
-        ["Word Work", s.word_work],
-        ["Text Structure", s.text_structure]
-      ];
+  const rows = [
+    ["Reading Strategy", s.reading_strategy],
+    ["Comprehension Skill", s.comprehension_skill],
+    ["Phonological Awareness", s.phonological_awareness],
+    ["Grammar and Mechanics", s.grammar_mechanics],
+    ["Word Work", s.word_work],
+    ["Text Structure", s.text_structure]
+  ];
 
   rows.forEach(([label, value], i) => {
     const row = makeEl("div", "skills-row");
@@ -582,8 +509,6 @@ function renderBack() {
 
   el.surface.appendChild(lvl);
 
-  // Bottom block pinned to the bottom of the back page.
-  // Inline marginTop protects this even if .back-bottom is not yet in reader.css.
   const bottom = makeEl("div", "back-bottom");
   bottom.style.marginTop = "auto";
 
@@ -625,10 +550,6 @@ function renderBack() {
   bottom.appendChild(footer);
   el.surface.appendChild(bottom);
 }
-
-/* ------------------------------------------------------------------ */
-/*  Navigation                                                        */
-/* ------------------------------------------------------------------ */
 
 function updateNav() {
   const total = screens.length;
@@ -686,10 +607,6 @@ function previousPage() {
   goTo(currentIndex - 1);
 }
 
-/* ------------------------------------------------------------------ */
-/*  Progress persistence                                              */
-/* ------------------------------------------------------------------ */
-
 function progressKey() {
   return `tafiya-reader:${(bookPackage.book && bookPackage.book.book_code) || ""}:screen`;
 }
@@ -710,24 +627,12 @@ function restoreProgress() {
   } catch (e) {}
 }
 
-/* ------------------------------------------------------------------ */
-/*  Input                                                             */
-/* ------------------------------------------------------------------ */
-
 function bindEvents() {
   el.next.addEventListener("click", nextPage);
   el.prev.addEventListener("click", previousPage);
 
   el.back.addEventListener("click", () => {
-    console.log("[Tafiya Reader] Back to Library — homepage link will be wired later.");
-    el.back.animate(
-      [
-        { transform: "scale(1)" },
-        { transform: "scale(0.94)" },
-        { transform: "scale(1)" }
-      ],
-      { duration: 220, easing: "ease" }
-    );
+    window.location.href = "../library.html";
   });
 
   document.addEventListener("keydown", (e) => {
@@ -774,10 +679,6 @@ function bindEvents() {
     { passive: true }
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Boot                                                              */
-/* ------------------------------------------------------------------ */
 
 function renderBook(pkg) {
   bookPackage = normalizeBookPackage(pkg);

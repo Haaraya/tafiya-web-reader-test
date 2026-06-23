@@ -13,7 +13,10 @@
     "code": "T4-NF-01",
     "level": "Level 4",
     "tafiya_name": "Tafiya",
-    "cover_image_path": "books/T4-NF-01/T4-NF-01_FC.png"
+    "cover_image_path": "books/T4-NF-01/T4-NF-01_FC.png",
+    "about_text": "Jollof rice is loved across Nigeria. Follow each step — from blending the tomatoes to lifting the lid — and learn how to make one of Nigeria's greatest dishes.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "book_code": "T4-NF-02",
@@ -29,7 +32,10 @@
     "code": "T4-NF-02",
     "level": "Level 4",
     "tafiya_name": "Tafiya",
-    "cover_image_path": "books/T4-NF-02/T4-NF-02_FC.png"
+    "cover_image_path": "books/T4-NF-02/T4-NF-02_FC.png",
+    "about_text": "The keke napep is one of Nigeria's busiest vehicles. Find out where it came from, how it works, and why keke drivers know their neighbourhoods better than anyone.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "book_code": "T4-F-03",
@@ -45,7 +51,10 @@
     "code": "T4-F-03",
     "level": "Level 4",
     "tafiya_name": "Tafiya",
-    "cover_image_path": "books/T4-F-03/T4-F-03_FC.png"
+    "cover_image_path": "books/T4-F-03/T4-F-03_FC.png",
+    "about_text": "It is harvest day and Amina wakes before sunrise to go to the farm for the very first time. She works hard all morning and learns something important about where food comes from.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "book_code": "T4-F-04",
@@ -61,7 +70,10 @@
     "code": "T4-F-04",
     "level": "Level 4",
     "tafiya_name": "Tafiya",
-    "cover_image_path": "books/T4-F-04/T4-F-04_FC.png"
+    "cover_image_path": "books/T4-F-04/T4-F-04_FC.png",
+    "about_text": "Naza leads Emeka and Ada to a place she has always known — a river just beyond the estate. A story about friendship, a kingfisher, and the things that are always there if you look.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "code": "T4-F-01",
@@ -70,7 +82,10 @@
     "tafiya_name": "Tafiya",
     "book_type": "fiction",
     "status": "approved",
-    "cover_image_path": "books/T4-F-01/T4-F-01_FC.png"
+    "cover_image_path": "books/T4-F-01/T4-F-01_FC.png",
+    "about_text": "It is the day of the school play and Emeka cannot remember his words. His friend Ada gives him one piece of advice — and it changes everything.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "code": "T4-F-02",
@@ -79,7 +94,10 @@
     "tafiya_name": "Tafiya",
     "book_type": "fiction",
     "status": "approved",
-    "cover_image_path": "books/T4-F-02/T4-F-02_FC.png"
+    "cover_image_path": "books/T4-F-02/T4-F-02_FC.png",
+    "about_text": "Bolu's drum is missing. He asks Naza. He asks Amina. Amina smiles and says, come with me. What they find under the mango tree is very unexpected.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "code": "T4-F-05",
@@ -88,7 +106,10 @@
     "tafiya_name": "Tafiya",
     "book_type": "fiction",
     "status": "approved",
-    "cover_image_path": "books/T4-F-05/T4-F-05_FC.png"
+    "cover_image_path": "books/T4-F-05/T4-F-05_FC.png",
+    "about_text": "Ada and Stella watch a large brown crab by the river. Stella knows its name, its food, and its importance. That evening, Ada draws it in her book.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "code": "T4-FT-01",
@@ -97,7 +118,10 @@
     "tafiya_name": "Tafiya",
     "book_type": "folktale",
     "status": "approved",
-    "cover_image_path": "books/T4-FT-01/T4-FT-01_FC.png"
+    "cover_image_path": "books/T4-FT-01/T4-FT-01_FC.png",
+    "about_text": "All the stories in the world belong to Nyame the Sky God — until a small spider decides to challenge him. The classic Anansi story, retold for young Nigerian readers.",
+    "fp_level": "C–D",
+    "uk_book_band": "Blue 4"
   },
   {
     "code": "T3-NF-01",
@@ -106,7 +130,10 @@
     "tafiya_name": "Hanya",
     "book_type": "non-fiction",
     "status": "approved",
-    "cover_image_path": "books/T3-NF-01/T3-NF-01_FC.png"
+    "cover_image_path": "books/T3-NF-01/T3-NF-01_FC.png",
+    "about_text": "Where does water come from? From wells, rivers, taps, and rain. A clear look at how Nigerian families find and carry water through the dry and rainy seasons.",
+    "fp_level": "B–C",
+    "uk_book_band": "Yellow 3"
   },
   {
     "code": "T3-NF-02",
@@ -115,6 +142,9 @@
     "tafiya_name": "Hanya",
     "book_type": "non-fiction",
     "status": "approved",
-    "cover_image_path": "books/T3-NF-02/T3-NF-02_FC.png"
+    "cover_image_path": "books/T3-NF-02/T3-NF-02_FC.png",
+    "about_text": "From yam and cassava in the south to millet and sorghum in the north, Nigeria's farmers grow food for everyone. A look at what grows across this large and varied land.",
+    "fp_level": "B–C",
+    "uk_book_band": "Yellow 3"
   }
 ]

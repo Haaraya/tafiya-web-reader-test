@@ -36,6 +36,12 @@ SKILL_FIELDS = [
     ("text_structure", "Text Structure", "eb_text_structure"),
 ]
 
+BACK_COVER_META_FIELDS = [
+    ("about_text", "back_about_text"),
+    ("fp_level", "back_fp_level"),
+    ("uk_book_band", "back_uk_book_band"),
+]
+
 
 def load_dotenv(path=".env"):
     env_path = Path(path)
@@ -47,9 +53,7 @@ def load_dotenv(path=".env"):
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        os.environ.setdefault(key, value)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 def die(message):
@@ -138,7 +142,7 @@ def validate_csv_package(target_codes, cover_by_code, pages_by_code, back_by_cod
         if code not in pages_by_code:
             die(f"{code}: missing page rows.")
         if code not in back_by_code:
-            die(f"{code}: missing back-cover CSV row. The CSV row is still needed for skills.")
+            die(f"{code}: missing back-cover CSV row.")
 
         if "-P-" in code:
             die(f"{code}: poetry is skipped for importer v2.")
@@ -465,9 +469,15 @@ def build_skill_rows(packages, skill_cols, book_ids):
 
         for p in packages:
             row = {"book_id": book_ids[p["code"]]}
+
             for key, _, csv_col in SKILL_FIELDS:
                 if key in skill_cols:
                     row[key] = clean(p["back"].get(csv_col))
+
+            for db_col, csv_col in BACK_COVER_META_FIELDS:
+                if db_col in skill_cols:
+                    row[db_col] = clean(p["back"].get(csv_col))
+
             rows.append(only_known(row, skill_cols))
 
         return rows
@@ -485,8 +495,17 @@ def build_skill_rows(packages, skill_cols, book_ids):
 
     rows = []
 
+    combined = []
+    for key, label, csv_col in SKILL_FIELDS:
+        combined.append((key, label, csv_col))
+    combined.extend([
+        ("about_text", "About This Book", "back_about_text"),
+        ("fp_level", "Fountas & Pinnell", "back_fp_level"),
+        ("uk_book_band", "UK Book Band", "back_uk_book_band"),
+    ])
+
     for p in packages:
-        for idx, (key, label, csv_col) in enumerate(SKILL_FIELDS, start=1):
+        for idx, (key, label, csv_col) in enumerate(combined, start=1):
             row = {
                 "book_id": book_ids[p["code"]],
                 key_col: key,
@@ -508,6 +527,7 @@ def update_books_json(path, packages):
 
     entries = []
     for package in packages:
+        back = package["back"]
         entries.append({
             "code": package["code"],
             "title": package["title"],
@@ -516,6 +536,9 @@ def update_books_json(path, packages):
             "book_type": package["book_type"],
             "status": "approved",
             "cover_image_path": package["cover_path"],
+            "about_text": clean(back.get("back_about_text")),
+            "fp_level": clean(back.get("back_fp_level")),
+            "uk_book_band": clean(back.get("back_uk_book_band")),
         })
 
     if p.exists():
@@ -641,8 +664,10 @@ def main():
         "books",
         [
             "id",
+            "book_code",
             "code",
             "title",
+            "book_title",
             "level",
             "level_name",
             "tafiya_name",
@@ -657,7 +682,20 @@ def main():
     )
     skill_cols = client.sample_columns(
         "book_skills",
-        ["id", "book_id", "skill_key", "skill_label", "skill_value", "sort_order"],
+        [
+            "id",
+            "book_id",
+            "reading_strategy",
+            "comprehension_skill",
+            "phonological_awareness",
+            "grammar_mechanics",
+            "word_work",
+            "text_structure",
+            "about_text",
+            "fp_level",
+            "uk_book_band",
+            "website",
+        ],
     )
 
     book_rows, code_col = build_book_rows(packages, book_cols, args.status)
