@@ -9,7 +9,8 @@
     "book_type": "Concept",
     "cover_image_path": "books/T1-C-01/T1-C-01_FC.png",
     "href": "reader/index.html?book=T1-C-01",
-    "reader_url": "reader/index.html?book=T1-C-01"
+    "reader_url": "reader/index.html?book=T1-C-01",
+    "thumbnail_image_path": "thumbnails/covers/T1-C-01_On_In_Under_fc.jpg"
   },
   {
     "book_code": "T1-C-02",
@@ -21,7 +22,8 @@
     "book_type": "Concept",
     "cover_image_path": "books/T1-C-02/T1-C-02_FC.png",
     "href": "reader/index.html?book=T1-C-02",
-    "reader_url": "reader/index.html?book=T1-C-02"
+    "reader_url": "reader/index.html?book=T1-C-02",
+    "thumbnail_image_path": "thumbnails/covers/T1-C-02_Big_and_Small_fc.jpg"
   },
   {
     "book_code": "T1-F-01",
@@ -33,7 +35,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T1-F-01/T1-F-01_FC.png",
     "href": "reader/index.html?book=T1-F-01",
-    "reader_url": "reader/index.html?book=T1-F-01"
+    "reader_url": "reader/index.html?book=T1-F-01",
+    "thumbnail_image_path": "thumbnails/covers/T1-F-01_Naza_at_the_Market_fc.jpg"
   },
   {
     "book_code": "T1-F-02",
@@ -45,7 +48,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T1-F-02/T1-F-02_FC.png",
     "href": "reader/index.html?book=T1-F-02",
-    "reader_url": "reader/index.html?book=T1-F-02"
+    "reader_url": "reader/index.html?book=T1-F-02",
+    "thumbnail_image_path": "thumbnails/covers/T1-F-02_Adas_Big_Bag_fc.jpg"
   },
   {
     "book_code": "T1-F-03",
@@ -57,7 +61,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T1-F-03/T1-F-03_FC.png",
     "href": "reader/index.html?book=T1-F-03",
-    "reader_url": "reader/index.html?book=T1-F-03"
+    "reader_url": "reader/index.html?book=T1-F-03",
+    "thumbnail_image_path": "thumbnails/covers/T1-F-03_Emeka_Can_Run_fc.jpg"
   },
   {
     "book_code": "T1-F-04",
@@ -69,7 +74,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T1-F-04/T1-F-04_FC.png",
     "href": "reader/index.html?book=T1-F-04",
-    "reader_url": "reader/index.html?book=T1-F-04"
+    "reader_url": "reader/index.html?book=T1-F-04",
+    "thumbnail_image_path": "thumbnails/covers/T1-F-04_Ada_and_the_Goat_fc.jpg"
   },
   {
     "book_code": "T1-F-05",
@@ -81,7 +87,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T1-F-05/T1-F-05_FC.png",
     "href": "reader/index.html?book=T1-F-05",
-    "reader_url": "reader/index.html?book=T1-F-05"
+    "reader_url": "reader/index.html?book=T1-F-05",
+    "thumbnail_image_path": "thumbnails/covers/T1-F-05_The_Big_Pot_fc.jpg"
   },
   {
     "book_code": "T2-C-01",
@@ -93,7 +100,8 @@
     "book_type": "Concept",
     "cover_image_path": "books/T2-C-01/T2-C-01_FC.png",
     "href": "reader/index.html?book=T2-C-01",
-    "reader_url": "reader/index.html?book=T2-C-01"
+    "reader_url": "reader/index.html?book=T2-C-01",
+    "thumbnail_image_path": "thumbnails/covers/T2-C-01_One_Two_Three_at_the_Market_fc.jpg"
   },
   {
     "book_code": "T2-C-02",
@@ -105,7 +113,8 @@
     "book_type": "Concept",
     "cover_image_path": "books/T2-C-02/T2-C-02_FC.png",
     "href": "reader/index.html?book=T2-C-02",
-    "reader_url": "reader/index.html?book=T2-C-02"
+    "reader_url": "reader/index.html?book=T2-C-02",
+    "thumbnail_image_path": "thumbnails/covers/T2-C-02_Where_Is_It_fc.jpg"
   },
   {
     "book_code": "T2-F-01",
@@ -117,7 +126,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T2-F-01/T2-F-01_FC.png",
     "href": "reader/index.html?book=T2-F-01",
-    "reader_url": "reader/index.html?book=T2-F-01"
+    "reader_url": "reader/index.html?book=T2-F-01",
+    "thumbnail_image_path": "thumbnails/covers/T2-F-01_Kemi_Goes_to_School_fc.jpg"
   },
   {
     "book_code": "T2-F-02",
@@ -129,7 +139,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T2-F-02/T2-F-02_FC.png",
     "href": "reader/index.html?book=T2-F-02",
-    "reader_url": "reader/index.html?book=T2-F-02"
+    "reader_url": "reader/index.html?book=T2-F-02",
+    "thumbnail_image_path": "thumbnails/covers/T2-F-02_He_Ran_She_Ran_fc.jpg"
   },
   {
     "book_code": "T2-F-03",
@@ -141,7 +152,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T2-F-03/T2-F-03_FC.png",
     "href": "reader/index.html?book=T2-F-03",
-    "reader_url": "reader/index.html?book=T2-F-03"
+    "reader_url": "reader/index.html?book=T2-F-03",
+    "thumbnail_image_path": "thumbnails/covers/T2-F-03_My_Mothers_Fan_fc.jpg"
   },
   {
     "book_code": "T2-F-04",
@@ -153,7 +165,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T2-F-04/T2-F-04_FC.png",
     "href": "reader/index.html?book=T2-F-04",
-    "reader_url": "reader/index.html?book=T2-F-04"
+    "reader_url": "reader/index.html?book=T2-F-04",
+    "thumbnail_image_path": "thumbnails/covers/T2-F-04_Aminas_Kite_fc.jpg"
   },
   {
     "book_code": "T2-F-05",
@@ -165,7 +178,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T2-F-05/T2-F-05_FC.png",
     "href": "reader/index.html?book=T2-F-05",
-    "reader_url": "reader/index.html?book=T2-F-05"
+    "reader_url": "reader/index.html?book=T2-F-05",
+    "thumbnail_image_path": "thumbnails/covers/T2-F-05_The_Wet_Mat_fc.jpg"
   },
   {
     "book_code": "T3-F-01",
@@ -177,7 +191,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T3-F-01/T3-F-01_FC.png",
     "href": "reader/index.html?book=T3-F-01",
-    "reader_url": "reader/index.html?book=T3-F-01"
+    "reader_url": "reader/index.html?book=T3-F-01",
+    "thumbnail_image_path": "thumbnails/covers/T3-F-01_Ada_and_the_Lost_Hen_fc.jpg"
   },
   {
     "book_code": "T3-F-02",
@@ -189,7 +204,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T3-F-02/T3-F-02_FC.png",
     "href": "reader/index.html?book=T3-F-02",
-    "reader_url": "reader/index.html?book=T3-F-02"
+    "reader_url": "reader/index.html?book=T3-F-02",
+    "thumbnail_image_path": "thumbnails/covers/T3-F-02_Bolu_Wants_a_Drum_fc.jpg"
   },
   {
     "book_code": "T3-F-03",
@@ -201,7 +217,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T3-F-03/T3-F-03_FC.png",
     "href": "reader/index.html?book=T3-F-03",
-    "reader_url": "reader/index.html?book=T3-F-03"
+    "reader_url": "reader/index.html?book=T3-F-03",
+    "thumbnail_image_path": "thumbnails/covers/T3-F-03_The_River_Road_fc.jpg"
   },
   {
     "book_code": "T3-F-04",
@@ -213,7 +230,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T3-F-04/T3-F-04_FC.png",
     "href": "reader/index.html?book=T3-F-04",
-    "reader_url": "reader/index.html?book=T3-F-04"
+    "reader_url": "reader/index.html?book=T3-F-04",
+    "thumbnail_image_path": "thumbnails/covers/T3-F-04_Naza_and_the_Rain_fc.jpg"
   },
   {
     "book_code": "T3-F-05",
@@ -225,7 +243,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T3-F-05/T3-F-05_FC.png",
     "href": "reader/index.html?book=T3-F-05",
-    "reader_url": "reader/index.html?book=T3-F-05"
+    "reader_url": "reader/index.html?book=T3-F-05",
+    "thumbnail_image_path": "thumbnails/covers/T3-F-05_Bisi_and_the_Bell_fc.jpg"
   },
   {
     "book_code": "T3-FT-01",
@@ -237,7 +256,8 @@
     "book_type": "Folktale",
     "cover_image_path": "books/T3-FT-01/T3-FT-01_FC.png",
     "href": "reader/index.html?book=T3-FT-01",
-    "reader_url": "reader/index.html?book=T3-FT-01"
+    "reader_url": "reader/index.html?book=T3-FT-01",
+    "thumbnail_image_path": "thumbnails/covers/T3-FT-01_Why_the_Tortoise_Has_a_Cracked_Shell_fc.jpg"
   },
   {
     "book_code": "T3-NF-01",
@@ -249,7 +269,8 @@
     "book_type": "Non-Fiction",
     "cover_image_path": "books/T3-NF-01/T3-NF-01_FC.png",
     "href": "reader/index.html?book=T3-NF-01",
-    "reader_url": "reader/index.html?book=T3-NF-01"
+    "reader_url": "reader/index.html?book=T3-NF-01",
+    "thumbnail_image_path": "thumbnails/covers/T3-NF-01_How_We_Get_Water_fc.jpg"
   },
   {
     "book_code": "T3-NF-02",
@@ -261,7 +282,8 @@
     "book_type": "Non-Fiction",
     "cover_image_path": "books/T3-NF-02/T3-NF-02_FC.png",
     "href": "reader/index.html?book=T3-NF-02",
-    "reader_url": "reader/index.html?book=T3-NF-02"
+    "reader_url": "reader/index.html?book=T3-NF-02",
+    "thumbnail_image_path": "thumbnails/covers/T3-NF-02_What_Farmers_Grow_fc.jpg"
   },
   {
     "book_code": "T4-F-01",
@@ -273,7 +295,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T4-F-01/T4-F-01_FC.png",
     "href": "reader/index.html?book=T4-F-01",
-    "reader_url": "reader/index.html?book=T4-F-01"
+    "reader_url": "reader/index.html?book=T4-F-01",
+    "thumbnail_image_path": "thumbnails/covers/T4-F-01_Emekas_Big_Day_fc.jpg"
   },
   {
     "book_code": "T4-F-02",
@@ -285,7 +308,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T4-F-02/T4-F-02_FC.png",
     "href": "reader/index.html?book=T4-F-02",
-    "reader_url": "reader/index.html?book=T4-F-02"
+    "reader_url": "reader/index.html?book=T4-F-02",
+    "thumbnail_image_path": "thumbnails/covers/T4-F-02_Who_Has_the_Drum_fc.jpg"
   },
   {
     "book_code": "T4-F-03",
@@ -297,7 +321,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T4-F-03/T4-F-03_FC.png",
     "href": "reader/index.html?book=T4-F-03",
-    "reader_url": "reader/index.html?book=T4-F-03"
+    "reader_url": "reader/index.html?book=T4-F-03",
+    "thumbnail_image_path": "thumbnails/covers/T4-F-03_Amina_Goes_to_the_Farm_fc.jpg"
   },
   {
     "book_code": "T4-F-04",
@@ -309,7 +334,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T4-F-04/T4-F-04_FC.png",
     "href": "reader/index.html?book=T4-F-04",
-    "reader_url": "reader/index.html?book=T4-F-04"
+    "reader_url": "reader/index.html?book=T4-F-04",
+    "thumbnail_image_path": "thumbnails/covers/T4-F-04_Come_to_the_River_fc.jpg"
   },
   {
     "book_code": "T4-F-05",
@@ -321,7 +347,8 @@
     "book_type": "Fiction",
     "cover_image_path": "books/T4-F-05/T4-F-05_FC.png",
     "href": "reader/index.html?book=T4-F-05",
-    "reader_url": "reader/index.html?book=T4-F-05"
+    "reader_url": "reader/index.html?book=T4-F-05",
+    "thumbnail_image_path": "thumbnails/covers/T4-F-05_Ada_and_the_Crab_fc.jpg"
   },
   {
     "book_code": "T4-FT-01",
@@ -333,7 +360,8 @@
     "book_type": "Folktale",
     "cover_image_path": "books/T4-FT-01/T4-FT-01_FC.png",
     "href": "reader/index.html?book=T4-FT-01",
-    "reader_url": "reader/index.html?book=T4-FT-01"
+    "reader_url": "reader/index.html?book=T4-FT-01",
+    "thumbnail_image_path": "thumbnails/covers/T4-FT-01_How_Anansi_Got_All_the_Stories_fc.jpg"
   },
   {
     "book_code": "T4-NF-01",
@@ -345,7 +373,8 @@
     "book_type": "Non-Fiction",
     "cover_image_path": "books/T4-NF-01/T4-NF-01_FC.png",
     "href": "reader/index.html?book=T4-NF-01",
-    "reader_url": "reader/index.html?book=T4-NF-01"
+    "reader_url": "reader/index.html?book=T4-NF-01",
+    "thumbnail_image_path": "thumbnails/covers/T4-NF-01_How_We_Cook_Jollof_Rice_fc.jpg"
   },
   {
     "book_code": "T4-NF-02",
@@ -357,6 +386,7 @@
     "book_type": "Non-Fiction",
     "cover_image_path": "books/T4-NF-02/T4-NF-02_FC.png",
     "href": "reader/index.html?book=T4-NF-02",
-    "reader_url": "reader/index.html?book=T4-NF-02"
+    "reader_url": "reader/index.html?book=T4-NF-02",
+    "thumbnail_image_path": "thumbnails/covers/T4-NF-02_The_Keke_Napep_fc.jpg"
   }
 ]
