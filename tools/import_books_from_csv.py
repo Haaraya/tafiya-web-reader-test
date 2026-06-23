@@ -1,46 +1,53 @@
+#!/usr/bin/env python3
+"""
+Safe Haaraya/Tafiya CSV importer.
+
+What it does:
+- Reads Tafiya_Cover_Merge.csv, Tafiya_Pages_Merge.csv, Tafiya_BackCover_Merge.csv
+- Skips poetry books
+- Requires exactly FC + P1-P8 images
+- Requires exactly P1-P8 page rows
+- Skips books with bad/missing metadata
+- Upserts safe books into Supabase
+- Replaces old pages/skills for each imported book
+- Updates books.json for the library
+
+Run dry first:
+python tools/import_books_from_csv.py --dry-run --image-root "C:\\path\\to\\generated-images"
+
+Then real import:
+python tools/import_books_from_csv.py --image-root "C:\\path\\to\\generated-images"
+"""
+
 import argparse
 import csv
 import json
 import os
+import re
 import sys
+from collections import defaultdict
 from pathlib import Path
-from urllib.parse import quote
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError, URLError
+
+import requests
 
 
-EXISTING_WORKING_CODES = [
-    "T4-NF-01",
-    "T4-NF-02",
-    "T4-F-03",
-    "T4-F-04",
-]
+DEFAULT_COVER_CSV = "import_sources/Tafiya_Cover_Merge.csv"
+DEFAULT_PAGES_CSV = "import_sources/Tafiya_Pages_Merge.csv"
+DEFAULT_BACK_CSV = "import_sources/Tafiya_BackCover_Merge.csv"
+DEFAULT_BOOKS_JSON = "books.json"
+DEFAULT_BUCKET = "book-assets"
 
-NEXT_SIX_SAFEST_CODES = [
-    "T4-F-01",
-    "T4-F-02",
-    "T4-F-05",
-    "T4-FT-01",
-    "T3-NF-01",
-    "T3-NF-02",
-]
+BOOK_TYPE_LABELS = {
+    "F": "Fiction",
+    "NF": "Non-Fiction",
+    "FT": "Folktale",
+    "C": "Concept",
+    "P": "Poetry",
+}
 
-DEFAULT_TARGET_CODES = EXISTING_WORKING_CODES + NEXT_SIX_SAFEST_CODES
-
-SKILL_FIELDS = [
-    ("reading_strategy", "Reading Strategy", "eb_reading_strategy"),
-    ("comprehension_skill", "Comprehension Skill", "eb_comprehension_skill"),
-    ("phonological_awareness", "Phonological Awareness", "eb_phonological_awareness"),
-    ("grammar_mechanics", "Grammar & Mechanics", "eb_grammar_mechanics"),
-    ("word_work", "Word Work", "eb_word_work"),
-    ("text_structure", "Text Structure", "eb_text_structure"),
-]
-
-BACK_COVER_META_FIELDS = [
-    ("about_text", "back_about_text"),
-    ("fp_level", "back_fp_level"),
-    ("uk_book_band", "back_uk_book_band"),
-]
+EXPECTED_PAGE_LABELS = [f"P{i}" for i in range(1, 9)]
+EXPECTED_IMAGE_SUFFIXES = ["FC"] + EXPECTED_PAGE_LABELS
+IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"]
 
 
 def load_dotenv(path=".env"):
@@ -52,673 +59,647 @@ def load_dotenv(path=".env"):
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
+
         key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
 
-
-def die(message):
-    print(f"\nERROR: {message}", file=sys.stderr)
-    sys.exit(1)
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def clean(value):
     return (value or "").strip()
 
 
-def read_csv(path):
-    p = Path(path)
-    if not p.exists():
-        die(f"Missing CSV: {p}")
+def read_csv_rows(path):
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"CSV not found: {path}")
 
-    with p.open(newline="", encoding="utf-8-sig") as f:
+    with path.open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
 
 
-def index_by_code(rows, label):
-    out = {}
-    for row in rows:
-        code = clean(row.get("book_code"))
-        if not code:
-            die(f"{label} has a row with no book_code.")
-        if code in out:
-            die(f"{label} has duplicate book_code: {code}")
-        out[code] = row
-    return out
+def parse_book_code(code):
+    """
+    Expected examples:
+    T4-NF-01
+    T4-F-03
+    T1-C-02
+    T4-FT-01
+    T4-P-01
+    """
+    code = clean(code)
+    match = re.match(r"^T(\d+)-([A-Z]+)-(\d+)$", code)
+    if not match:
+        return None
 
-
-def group_pages(rows):
-    out = {}
-    for row in rows:
-        code = clean(row.get("book_code"))
-        if code:
-            out.setdefault(code, []).append(row)
-    return out
-
-
-def book_type_from_code(code):
-    parts = code.split("-")
-    if len(parts) < 3:
-        return "unknown"
-
-    marker = parts[1].upper()
     return {
-        "C": "concept",
-        "F": "fiction",
-        "FT": "folktale",
-        "NF": "non-fiction",
-        "P": "poetry",
-    }.get(marker, marker.lower())
+        "level": int(match.group(1)),
+        "type_code": match.group(2),
+        "sequence": int(match.group(3)),
+    }
 
 
-def sorted_page_rows(rows):
-    def page_number(row):
-        page_num = clean(row.get("page_num"))
-        if not page_num.startswith("P"):
-            return 999999
-        try:
-            return int(page_num[1:])
-        except ValueError:
-            return 999999
+def natural_book_sort_key(code):
+    parsed = parse_book_code(code)
+    if not parsed:
+        return (999, "ZZZ", 999, code)
 
-    return sorted(rows, key=page_number)
+    type_order = {
+        "C": 1,
+        "F": 2,
+        "FT": 3,
+        "NF": 4,
+        "P": 9,
+    }
 
-
-def expected_image_paths(code, page_rows):
-    paths = [f"books/{code}/{code}_FC.png"]
-
-    for row in sorted_page_rows(page_rows):
-        page_num = clean(row.get("page_num"))
-        paths.append(f"books/{code}/{code}_{page_num}.png")
-
-    return paths
+    return (
+        parsed["level"],
+        type_order.get(parsed["type_code"], 99),
+        parsed["sequence"],
+        code,
+    )
 
 
-def validate_csv_package(target_codes, cover_by_code, pages_by_code, back_by_code):
-    validated = []
+def is_poetry_book(code, page_rows):
+    parsed = parse_book_code(code)
+    if parsed and parsed["type_code"] == "P":
+        return True
 
-    for code in target_codes:
-        if code not in cover_by_code:
-            die(f"{code}: missing cover row.")
-        if code not in pages_by_code:
-            die(f"{code}: missing page rows.")
-        if code not in back_by_code:
-            die(f"{code}: missing back-cover CSV row.")
+    for row in page_rows:
+        if clean(row.get("page_num")).upper() == "POEM":
+            return True
 
-        if "-P-" in code:
-            die(f"{code}: poetry is skipped for importer v2.")
+    return False
 
-        cover = cover_by_code[code]
-        back = back_by_code[code]
-        pages = sorted_page_rows(pages_by_code[code])
 
-        page_nums = [clean(r.get("page_num")) for r in pages]
-        if any(p == "POEM" for p in page_nums):
-            die(f"{code}: has page_num=POEM. Poetry is skipped for now.")
+def page_label_to_number(label):
+    label = clean(label).upper()
+    match = re.match(r"^P(\d+)$", label)
+    if not match:
+        return None
+    return int(match.group(1))
 
-        expected_nums = [f"P{i}" for i in range(1, len(pages) + 1)]
-        if page_nums != expected_nums:
-            die(f"{code}: page numbers are {page_nums}, expected {expected_nums}.")
 
-        if len(pages) != 8:
-            die(f"{code}: has {len(pages)} pages. Expected 8 for this batch.")
+def word_count(text):
+    return len(re.findall(r"\b[\w'-]+\b", clean(text)))
 
-        cover_title = clean(cover.get("book_title"))
-        back_title = clean(back.get("book_title"))
-        page_titles = sorted({clean(r.get("book_title")) for r in pages})
 
-        if len(page_titles) != 1:
-            die(f"{code}: page rows contain multiple titles: {page_titles}")
+def text_band_for(text):
+    count = word_count(text)
+    if count <= 10:
+        return "short"
+    if count <= 28:
+        return "medium"
+    return "long"
 
-        if cover_title != page_titles[0]:
-            die(f"{code}: cover title does not match page title: {cover_title!r} vs {page_titles[0]!r}")
 
-        if cover_title != back_title:
-            die(f"{code}: cover title does not match back title: {cover_title!r} vs {back_title!r}")
+def storage_path(book_code, suffix):
+    return f"books/{book_code}/{book_code}_{suffix}.png"
 
-        validated.append({
-            "code": code,
-            "title": cover_title,
-            "level": clean(cover.get("level")),
-            "tafiya_name": clean(cover.get("tafiya_name")),
-            "book_type": book_type_from_code(code),
-            "cover_path": f"books/{code}/{code}_FC.png",
-            "pages": pages,
-            "back": back,
-            "expected_paths": expected_image_paths(code, pages),
-        })
 
-    return validated
+def find_case_insensitive_file(path):
+    path = Path(path)
+
+    if path.exists():
+        return path
+
+    parent = path.parent
+    if not parent.exists():
+        return None
+
+    wanted = path.name.lower()
+    for child in parent.iterdir():
+        if child.name.lower() == wanted:
+            return child
+
+    return None
+
+
+def image_candidates(image_root, csv_image_path, book_code, suffix):
+    candidates = []
+
+    names = [f"{book_code}_{suffix}{ext}" for ext in IMAGE_EXTENSIONS]
+
+    if suffix == "FC":
+        names += [f"{book_code}_COVER{ext}" for ext in IMAGE_EXTENSIONS]
+
+    if image_root:
+        root = Path(image_root)
+        for name in names:
+            candidates.append(root / name)
+
+    raw_path = clean(csv_image_path)
+    if raw_path:
+        raw = Path(raw_path)
+        candidates.append(raw)
+
+        for name in names:
+            candidates.append(raw.with_name(name))
+
+    return candidates
+
+
+def find_image(image_root, csv_image_path, book_code, suffix):
+    for candidate in image_candidates(image_root, csv_image_path, book_code, suffix):
+        found = find_case_insensitive_file(candidate)
+        if found:
+            return found
+    return None
+
+
+def index_single(rows, key_name):
+    indexed = {}
+    duplicates = defaultdict(list)
+
+    for row in rows:
+        key = clean(row.get(key_name))
+        if not key:
+            continue
+
+        if key in indexed:
+            duplicates[key].append(row)
+        else:
+            indexed[key] = row
+
+    return indexed, duplicates
+
+
+def required_back_fields_missing(back_row):
+    fields = [
+        "back_fp_level",
+        "back_uk_book_band",
+        "back_about_text",
+        "eb_reading_strategy",
+        "eb_comprehension_skill",
+        "eb_phonological_awareness",
+        "eb_grammar_mechanics",
+        "eb_word_work",
+        "eb_text_structure",
+    ]
+
+    return [field for field in fields if not clean(back_row.get(field))]
+
+
+def validate_book(code, cover_row, page_rows, back_row, image_root):
+    reasons = []
+
+    parsed = parse_book_code(code)
+    if not parsed:
+        reasons.append("bad book_code format")
+        return None, reasons
+
+    if parsed["type_code"] not in BOOK_TYPE_LABELS:
+        reasons.append(f"unknown book type: {parsed['type_code']}")
+
+    if is_poetry_book(code, page_rows):
+        reasons.append("poetry book skipped")
+
+    if not back_row:
+        reasons.append("missing back-cover row")
+
+    if not page_rows:
+        reasons.append("missing page rows")
+
+    if reasons:
+        return None, reasons
+
+    cover_title = clean(cover_row.get("book_title"))
+    back_title = clean(back_row.get("book_title"))
+    page_titles = {clean(row.get("book_title")) for row in page_rows if clean(row.get("book_title"))}
+
+    all_titles = {cover_title, back_title, *page_titles}
+    all_titles.discard("")
+
+    if len(all_titles) > 1:
+        reasons.append(f"title mismatch across CSVs: {sorted(all_titles)}")
+
+    if not cover_title:
+        reasons.append("missing title")
+
+    level_text = clean(cover_row.get("level"))
+    level_match = re.search(r"\d+", level_text)
+    if not level_match:
+        reasons.append(f"bad level value: {level_text}")
+
+    tafiya_name = clean(cover_row.get("tafiya_name"))
+    if not tafiya_name:
+        reasons.append("missing tafiya_name")
+
+    page_map = defaultdict(list)
+    for row in page_rows:
+        label = clean(row.get("page_num")).upper()
+        page_map[label].append(row)
+
+    actual_labels = set(page_map.keys())
+    expected_labels = set(EXPECTED_PAGE_LABELS)
+
+    if actual_labels != expected_labels:
+        missing = sorted(expected_labels - actual_labels)
+        extra = sorted(actual_labels - expected_labels)
+        parts = []
+        if missing:
+            parts.append(f"missing pages {missing}")
+        if extra:
+            parts.append(f"unexpected pages {extra}")
+        reasons.append("; ".join(parts))
+
+    duplicates = [label for label, rows in page_map.items() if len(rows) > 1]
+    if duplicates:
+        reasons.append(f"duplicate page rows: {sorted(duplicates)}")
+
+    empty_text_pages = []
+    for label in EXPECTED_PAGE_LABELS:
+        rows = page_map.get(label, [])
+        if rows and not clean(rows[0].get("page_text")):
+            empty_text_pages.append(label)
+
+    if empty_text_pages:
+        reasons.append(f"empty page text: {empty_text_pages}")
+
+    missing_back_fields = required_back_fields_missing(back_row)
+    if missing_back_fields:
+        reasons.append(f"missing back-cover fields: {missing_back_fields}")
+
+    missing_images = []
+
+    cover_csv_path = cover_row.get("image_path")
+    if not find_image(image_root, cover_csv_path, code, "FC"):
+        missing_images.append("FC")
+
+    for label in EXPECTED_PAGE_LABELS:
+        rows = page_map.get(label, [])
+        csv_path = rows[0].get("image_path") if rows else ""
+        if not find_image(image_root, csv_path, code, label):
+            missing_images.append(label)
+
+    if missing_images:
+        reasons.append(f"missing images: {missing_images}")
+
+    if reasons:
+        return None, reasons
+
+    sorted_pages = []
+    for label in EXPECTED_PAGE_LABELS:
+        row = page_map[label][0]
+        sorted_pages.append(
+            {
+                "page_number": page_label_to_number(label),
+                "page_text": clean(row.get("page_text")),
+                "image_path": storage_path(code, label),
+                "layout": "image_top_text_bottom",
+                "text_band": text_band_for(row.get("page_text")),
+                "word_count": word_count(row.get("page_text")),
+            }
+        )
+
+    book_type = BOOK_TYPE_LABELS[parsed["type_code"]]
+    level_number = int(level_match.group(0))
+    total_words = sum(page["word_count"] for page in sorted_pages)
+
+    book = {
+        "book_code": code,
+        "title": cover_title,
+        "strand": "Tafiya",
+        "level": level_number,
+        "tafiya_name": tafiya_name,
+        "book_type": book_type,
+        "theme": "",
+        "topic": "",
+        "cover_image_path": storage_path(code, "FC"),
+        "status": "published",
+    }
+
+    skills = {
+        "about_text": clean(back_row.get("back_about_text")),
+        "fp_level": clean(back_row.get("back_fp_level")),
+        "uk_book_band": clean(back_row.get("back_uk_book_band")),
+        "reading_strategy": clean(back_row.get("eb_reading_strategy")),
+        "comprehension_skill": clean(back_row.get("eb_comprehension_skill")),
+        "phonological_awareness": clean(back_row.get("eb_phonological_awareness")),
+        "grammar_mechanics": clean(back_row.get("eb_grammar_mechanics")),
+        "word_work": clean(back_row.get("eb_word_work")),
+        "text_structure": clean(back_row.get("eb_text_structure")),
+        "topic": "",
+        "key_vocabulary": "",
+        "total_word_count": total_words,
+        "website": "",
+    }
+
+    prepared = {
+        "book": book,
+        "pages": sorted_pages,
+        "skills": skills,
+    }
+
+    return prepared, []
 
 
 class SupabaseClient:
     def __init__(self, url, service_key):
         self.url = url.rstrip("/")
-        self.rest_url = f"{self.url}/rest/v1"
         self.service_key = service_key
-
-    def headers(self, extra=None):
-        h = {
-            "apikey": self.service_key,
-            "Authorization": f"Bearer {self.service_key}",
+        self.headers = {
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
             "Content-Type": "application/json",
         }
-        if extra:
-            h.update(extra)
-        return h
 
-    def request_json(self, method, url, body=None, headers=None):
-        data = None
-        if body is not None:
-            data = json.dumps(body).encode("utf-8")
+    def request(self, method, path, json_body=None, prefer=None, expected=(200, 201, 204)):
+        headers = dict(self.headers)
+        if prefer:
+            headers["Prefer"] = prefer
 
-        req = Request(url, data=data, method=method, headers=self.headers(headers))
-
-        try:
-            with urlopen(req) as resp:
-                raw = resp.read().decode("utf-8")
-                if not raw:
-                    return None
-                return json.loads(raw)
-        except HTTPError as e:
-            detail = e.read().decode("utf-8", errors="replace")
-            die(f"Supabase HTTP {e.code} for {method} {url}\n{detail}")
-        except URLError as e:
-            die(f"Could not reach Supabase: {e}")
-
-    def get_rows(self, table, query):
-        url = f"{self.rest_url}/{table}?{query}"
-        return self.request_json("GET", url)
-
-    def sample_columns(self, table, fallback):
-        rows = self.get_rows(table, "select=*&limit=1")
-        if rows and isinstance(rows, list) and rows:
-            return set(rows[0].keys())
-        return set(fallback)
-
-    def upsert(self, table, rows, conflict_col):
-        if not rows:
-            return []
-
-        url = f"{self.rest_url}/{table}?on_conflict={quote(conflict_col)}"
-        return self.request_json(
-            "POST",
-            url,
-            rows,
-            headers={"Prefer": "resolution=merge-duplicates,return=representation"},
+        response = requests.request(
+            method,
+            f"{self.url}{path}",
+            headers=headers,
+            json=json_body,
+            timeout=60,
         )
 
-    def insert(self, table, rows):
-        if not rows:
-            return []
+        if response.status_code not in expected:
+            raise RuntimeError(
+                f"Supabase {method} {path} failed: "
+                f"{response.status_code} {response.text}"
+            )
 
-        url = f"{self.rest_url}/{table}"
-        return self.request_json(
+        if response.status_code == 204 or not response.text:
+            return None
+
+        return response.json()
+
+    def upsert_book(self, book):
+        data = self.request(
             "POST",
-            url,
-            rows,
-            headers={"Prefer": "return=minimal"},
+            "/rest/v1/books?on_conflict=book_code",
+            json_body=book,
+            prefer="resolution=merge-duplicates,return=representation",
+            expected=(200, 201),
         )
 
-    def delete_by_book_ids(self, table, book_ids):
-        if not book_ids:
-            return
+        if not data:
+            raise RuntimeError(f"No book returned after upsert: {book['book_code']}")
 
-        joined = ",".join(book_ids)
-        url = f"{self.rest_url}/{table}?book_id=in.({joined})"
-        self.request_json(
+        return data[0]["id"]
+
+    def delete_existing_book_children(self, book_id):
+        self.request(
             "DELETE",
-            url,
-            headers={"Prefer": "return=minimal"},
+            f"/rest/v1/book_pages?book_id=eq.{book_id}",
+            prefer="return=minimal",
+            expected=(200, 204),
         )
 
-    def list_storage_folder(self, bucket, folder):
-        url = f"{self.url}/storage/v1/object/list/{quote(bucket)}"
-        body = {
-            "prefix": folder,
-            "limit": 1000,
-            "offset": 0,
-            "sortBy": {"column": "name", "order": "asc"},
-        }
-        return self.request_json("POST", url, body)
-
-    def storage_object_exists(self, bucket, path):
-        quoted_path = quote(path, safe="/")
-        url = f"{self.url}/storage/v1/object/{quote(bucket)}/{quoted_path}"
-
-        req = Request(
-            url,
-            method="GET",
-            headers=self.headers({"Range": "bytes=0-0"}),
+        self.request(
+            "DELETE",
+            f"/rest/v1/book_skills?book_id=eq.{book_id}",
+            prefer="return=minimal",
+            expected=(200, 204),
         )
 
+    def insert_pages(self, book_id, pages):
+        payload = []
+        for page in pages:
+            row = dict(page)
+            row["book_id"] = book_id
+            payload.append(row)
+
+        self.request(
+            "POST",
+            "/rest/v1/book_pages",
+            json_body=payload,
+            prefer="return=minimal",
+            expected=(200, 201),
+        )
+
+    def insert_skills(self, book_id, skills):
+        payload = dict(skills)
+        payload["book_id"] = book_id
+
+        self.request(
+            "POST",
+            "/rest/v1/book_skills",
+            json_body=payload,
+            prefer="return=minimal",
+            expected=(200, 201),
+        )
+
+    def import_book(self, prepared):
+        book_id = self.upsert_book(prepared["book"])
+        self.delete_existing_book_children(book_id)
+        self.insert_pages(book_id, prepared["pages"])
+        self.insert_skills(book_id, prepared["skills"])
+        return book_id
+
+
+def build_books_json_payload(imported_books, existing_payload):
+    library_books = []
+
+    for book in imported_books:
+        code = book["book_code"]
+        library_books.append(
+            {
+                "book_code": code,
+                "code": code,
+                "title": book["title"],
+                "level": book["level"],
+                "tafiya_name": book["tafiya_name"],
+                "level_name": book["tafiya_name"],
+                "book_type": book["book_type"],
+                "cover_image_path": book["cover_image_path"],
+                "href": f"reader/index.html?book={code}",
+                "reader_url": f"reader/index.html?book={code}",
+            }
+        )
+
+    if isinstance(existing_payload, dict):
+        existing_payload["books"] = library_books
+        return existing_payload
+
+    return library_books
+
+
+def write_books_json(path, imported_books):
+    path = Path(path)
+
+    existing_payload = None
+    if path.exists():
         try:
-            with urlopen(req) as resp:
-                return resp.status in (200, 206)
-        except HTTPError as e:
-            return e.code not in (400, 401, 403, 404)
-        except URLError:
-            return False
-
-
-def validate_storage_paths(client, bucket, packages):
-    missing = []
-
-    for package in packages:
-        code = package["code"]
-        folder = f"books/{code}"
-
-        objects = client.list_storage_folder(bucket, folder)
-        found = set()
-
-        for obj in objects or []:
-            name = clean(obj.get("name"))
-            if not name:
-                continue
-
-            if name.startswith(folder):
-                found.add(name)
-            else:
-                found.add(f"{folder}/{name}")
-
-        for path in package["expected_paths"]:
-            if path not in found:
-                if not client.storage_object_exists(bucket, path):
-                    missing.append(path)
-
-    if missing:
-        print("\nMissing Supabase Storage objects:")
-        for path in missing:
-            print(f"  - {path}")
-        die("Storage validation failed. Do not import until these paths exist.")
-
-    total = sum(len(p["expected_paths"]) for p in packages)
-    print(f"Storage validation passed for {total} image paths.")
-
-
-def first_existing(columns, candidates):
-    for col in candidates:
-        if col in columns:
-            return col
-    return None
-
-
-def only_known(row, columns):
-    return {k: v for k, v in row.items() if k in columns}
-
-
-def build_book_rows(packages, book_cols, status):
-    code_col = first_existing(book_cols, ["code", "book_code"])
-    title_col = first_existing(book_cols, ["title", "book_title"])
-
-    if not code_col:
-        die("books table needs a code or book_code column.")
-    if not title_col:
-        die("books table needs a title or book_title column.")
-
-    rows = []
-
-    for p in packages:
-        row = {
-            code_col: p["code"],
-            title_col: p["title"],
-        }
-
-        optional_values = {
-            "level": p["level"],
-            "level_name": p["tafiya_name"],
-            "tafiya_name": p["tafiya_name"],
-            "status": status,
-            "book_type": p["book_type"],
-            "type": p["book_type"],
-            "strand": p["book_type"],
-            "cover_image_path": p["cover_path"],
-            "front_cover_image_path": p["cover_path"],
-            "cover_path": p["cover_path"],
-            "image_path": p["cover_path"],
-        }
-
-        for col, value in optional_values.items():
-            if col in book_cols:
-                row[col] = value
-
-        rows.append(row)
-
-    return rows, code_col
-
-
-def fetch_book_ids(client, codes, code_col):
-    code_list = ",".join(codes)
-    query = f"select=id,{code_col}&{code_col}=in.({code_list})"
-    rows = client.get_rows("books", query)
-
-    out = {}
-    for row in rows or []:
-        out[str(row[code_col])] = str(row["id"])
-
-    missing = [c for c in codes if c not in out]
-    if missing:
-        die(f"Could not fetch book ids after upsert: {missing}")
-
-    return out
-
-
-def classify_text_length(text):
-    words = [w for w in clean(text).split() if w]
-    count = len(words)
-
-    if count <= 10:
-        return "short"
-    if count <= 24:
-        return "medium"
-    return "long"
-
-
-def build_page_rows(packages, page_cols, book_ids):
-    rows = []
-
-    page_number_col = first_existing(page_cols, ["page_number", "page_no", "page_num"])
-    page_text_col = first_existing(page_cols, ["page_text", "text", "body"])
-    image_path_col = first_existing(page_cols, ["image_path", "page_image_path"])
-
-    if "book_id" not in page_cols:
-        die("book_pages table needs a book_id column.")
-    if not page_number_col:
-        die("book_pages table needs page_number, page_no, or page_num.")
-    if not page_text_col:
-        die("book_pages table needs page_text, text, or body.")
-    if not image_path_col:
-        die("book_pages table needs image_path or page_image_path.")
-
-    for p in packages:
-        code = p["code"]
-        book_id = book_ids[code]
-
-        for row in sorted_page_rows(p["pages"]):
-            page_num = clean(row.get("page_num"))
-            number = int(page_num[1:])
-            text = clean(row.get("page_text"))
-            image_path = f"books/{code}/{code}_{page_num}.png"
-
-            page_row = {
-                "book_id": book_id,
-                page_number_col: number,
-                page_text_col: text,
-                image_path_col: image_path,
-            }
-
-            if "length" in page_cols:
-                page_row["length"] = classify_text_length(text)
-            if "text_length" in page_cols:
-                page_row["text_length"] = classify_text_length(text)
-            if "page_type" in page_cols:
-                page_row["page_type"] = "interior"
-
-            rows.append(only_known(page_row, page_cols))
-
-    return rows
-
-
-def build_skill_rows(packages, skill_cols, book_ids):
-    if "book_id" not in skill_cols:
-        die("book_skills table needs a book_id column.")
-
-    has_wide_skill_cols = any(key in skill_cols for key, _, _ in SKILL_FIELDS)
-
-    if has_wide_skill_cols:
-        rows = []
-
-        for p in packages:
-            row = {"book_id": book_ids[p["code"]]}
-
-            for key, _, csv_col in SKILL_FIELDS:
-                if key in skill_cols:
-                    row[key] = clean(p["back"].get(csv_col))
-
-            for db_col, csv_col in BACK_COVER_META_FIELDS:
-                if db_col in skill_cols:
-                    row[db_col] = clean(p["back"].get(csv_col))
-
-            rows.append(only_known(row, skill_cols))
-
-        return rows
-
-    key_col = first_existing(skill_cols, ["skill_key", "skill_name", "skill_type", "field_name", "name"])
-    value_col = first_existing(skill_cols, ["skill_value", "value", "field_value", "description"])
-    label_col = first_existing(skill_cols, ["skill_label", "label", "display_name"])
-    order_col = first_existing(skill_cols, ["sort_order", "display_order", "order_index", "position"])
-
-    if not key_col or not value_col:
-        die(
-            "book_skills table needs either wide skill columns "
-            "or a key/value shape like skill_key + skill_value."
-        )
-
-    rows = []
-
-    combined = []
-    for key, label, csv_col in SKILL_FIELDS:
-        combined.append((key, label, csv_col))
-    combined.extend([
-        ("about_text", "About This Book", "back_about_text"),
-        ("fp_level", "Fountas & Pinnell", "back_fp_level"),
-        ("uk_book_band", "UK Book Band", "back_uk_book_band"),
-    ])
-
-    for p in packages:
-        for idx, (key, label, csv_col) in enumerate(combined, start=1):
-            row = {
-                "book_id": book_ids[p["code"]],
-                key_col: key,
-                value_col: clean(p["back"].get(csv_col)),
-            }
-
-            if label_col:
-                row[label_col] = label
-            if order_col:
-                row[order_col] = idx
-
-            rows.append(only_known(row, skill_cols))
-
-    return rows
-
-
-def update_books_json(path, packages):
-    p = Path(path)
-
-    entries = []
-    for package in packages:
-        back = package["back"]
-        entries.append({
-            "code": package["code"],
-            "title": package["title"],
-            "level": package["level"],
-            "tafiya_name": package["tafiya_name"],
-            "book_type": package["book_type"],
-            "status": "approved",
-            "cover_image_path": package["cover_path"],
-            "about_text": clean(back.get("back_about_text")),
-            "fp_level": clean(back.get("back_fp_level")),
-            "uk_book_band": clean(back.get("back_uk_book_band")),
-        })
-
-    if p.exists():
-        data = json.loads(p.read_text(encoding="utf-8"))
-    else:
-        data = []
-
-    def code_of(item):
-        return item.get("code") or item.get("book_code")
-
-    if isinstance(data, list):
-        by_code = {code_of(item): item for item in data if isinstance(item, dict)}
-
-        for entry in entries:
-            old = by_code.get(entry["code"], {})
-            old.update(entry)
-            old.pop("back_cover_image_path", None)
-            old.pop("back_image_path", None)
-            old.pop("back_cover_path", None)
-            by_code[entry["code"]] = old
-
-        data = list(by_code.values())
-
-    elif isinstance(data, dict) and isinstance(data.get("books"), list):
-        by_code = {code_of(item): item for item in data["books"] if isinstance(item, dict)}
-
-        for entry in entries:
-            old = by_code.get(entry["code"], {})
-            old.update(entry)
-            old.pop("back_cover_image_path", None)
-            old.pop("back_image_path", None)
-            old.pop("back_cover_path", None)
-            by_code[entry["code"]] = old
-
-        data["books"] = list(by_code.values())
-
-    elif isinstance(data, dict):
-        for entry in entries:
-            old = data.get(entry["code"], {})
-            if not isinstance(old, dict):
-                old = {}
-
-            old.update(entry)
-            old.pop("back_cover_image_path", None)
-            old.pop("back_image_path", None)
-            old.pop("back_cover_path", None)
-            data[entry["code"]] = old
-
-    else:
-        die(f"{path} is not a JSON list or object.")
-
-    p.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Updated {p}")
-
-
-def chunked(items, size):
-    for i in range(0, len(items), size):
-        yield items[i:i + size]
+            existing_payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            existing_payload = None
+
+    payload = build_books_json_payload(imported_books, existing_payload)
+
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def print_skip_report(skipped):
+    if not skipped:
+        print("Skipped: 0")
+        return
+
+    print(f"Skipped: {len(skipped)}")
+    for item in skipped:
+        code = item["book_code"]
+        reasons = "; ".join(item["reasons"])
+        print(f"  - {code}: {reasons}")
+
+
+def parse_only(value):
+    if not value:
+        return None
+
+    return {
+        clean(part)
+        for part in re.split(r"[,\s]+", value)
+        if clean(part)
+    }
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import Tafiya CSV books into Supabase.")
-    parser.add_argument("--cover", default="import_sources/Tafiya_Cover_Merge.csv")
-    parser.add_argument("--pages", default="import_sources/Tafiya_Pages_Merge.csv")
-    parser.add_argument("--back", default="import_sources/Tafiya_BackCover_Merge.csv")
-    parser.add_argument("--books-json", default="books.json")
-    parser.add_argument("--book-codes", nargs="+", default=DEFAULT_TARGET_CODES)
-    parser.add_argument("--bucket", default=None)
-    parser.add_argument("--status", default="approved")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cover-csv", default=DEFAULT_COVER_CSV)
+    parser.add_argument("--pages-csv", default=DEFAULT_PAGES_CSV)
+    parser.add_argument("--back-csv", default=DEFAULT_BACK_CSV)
+    parser.add_argument("--books-json", default=DEFAULT_BOOKS_JSON)
+    parser.add_argument("--image-root", default="")
+    parser.add_argument("--bucket", default=DEFAULT_BUCKET)
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--skip-storage-validation", action="store_true")
+    parser.add_argument("--no-books-json", action="store_true")
+    parser.add_argument("--only", default="", help="Comma/space-separated book codes")
+    parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--keep-going", action="store_true")
     args = parser.parse_args()
 
     load_dotenv()
 
+    cover_rows = read_csv_rows(args.cover_csv)
+    page_rows = read_csv_rows(args.pages_csv)
+    back_rows = read_csv_rows(args.back_csv)
+
+    cover_by_code, cover_dupes = index_single(cover_rows, "book_code")
+    back_by_code, back_dupes = index_single(back_rows, "book_code")
+
+    pages_by_code = defaultdict(list)
+    for row in page_rows:
+        code = clean(row.get("book_code"))
+        if code:
+            pages_by_code[code].append(row)
+
+    only_codes = parse_only(args.only)
+
+    prepared_books = []
+    skipped = []
+
+    for code in sorted(cover_by_code.keys(), key=natural_book_sort_key):
+        if only_codes and code not in only_codes:
+            continue
+
+        reasons = []
+
+        if code in cover_dupes:
+            reasons.append("duplicate cover rows")
+
+        if code in back_dupes:
+            reasons.append("duplicate back-cover rows")
+
+        prepared, validation_reasons = validate_book(
+            code=code,
+            cover_row=cover_by_code[code],
+            page_rows=pages_by_code.get(code, []),
+            back_row=back_by_code.get(code),
+            image_root=args.image_root,
+        )
+
+        reasons.extend(validation_reasons)
+
+        if reasons:
+            skipped.append(
+                {
+                    "book_code": code,
+                    "reasons": reasons,
+                }
+            )
+            continue
+
+        prepared_books.append(prepared)
+
+        if args.limit and len(prepared_books) >= args.limit:
+            break
+
+    print("")
+    print("SAFE IMPORT CHECK")
+    print("-----------------")
+    print(f"Cover rows: {len(cover_rows)}")
+    print(f"Unique cover books: {len(cover_by_code)}")
+    print(f"Prepared safe books: {len(prepared_books)}")
+    print_skip_report(skipped)
+    print("")
+
+    if prepared_books:
+        print("Safe books:")
+        for item in prepared_books:
+            book = item["book"]
+            print(f"  - {book['book_code']} | {book['title']} | Level {book['level']} | {book['book_type']}")
+        print("")
+
+    if args.dry_run:
+        print("Dry run only. Supabase was not changed.")
+        return
+
+    if not prepared_books:
+        print("No safe books to import. Stopping.")
+        sys.exit(1)
+
     supabase_url = os.environ.get("SUPABASE_URL")
     service_key = (
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        or os.environ.get("SUPABASE_SECRET_KEY")
         or os.environ.get("SUPABASE_SERVICE_KEY")
-        or os.environ.get("SERVICE_ROLE_KEY")
-    )
-    bucket = (
-        args.bucket
-        or os.environ.get("BOOK_ASSETS_BUCKET")
-        or os.environ.get("SUPABASE_BUCKET")
-        or "book-assets"
     )
 
-    if not supabase_url:
-        die("Missing SUPABASE_URL in .env.")
-    if not service_key:
-        die("Missing SUPABASE_SERVICE_ROLE_KEY in .env.")
-
-    cover_rows = read_csv(args.cover)
-    page_rows = read_csv(args.pages)
-    back_rows = read_csv(args.back)
-
-    cover_by_code = index_by_code(cover_rows, "cover CSV")
-    pages_by_code = group_pages(page_rows)
-    back_by_code = index_by_code(back_rows, "back-cover CSV")
-
-    packages = validate_csv_package(
-        args.book_codes,
-        cover_by_code,
-        pages_by_code,
-        back_by_code,
-    )
-
-    print("\nImporter v2 target batch:")
-    for p in packages:
-        print(f"  - {p['code']} | {p['title']} | {p['level']} | {p['book_type']}")
+    if not supabase_url or not service_key:
+        raise RuntimeError(
+            "Missing Supabase credentials. Add SUPABASE_URL and "
+            "SUPABASE_SERVICE_ROLE_KEY to .env."
+        )
 
     client = SupabaseClient(supabase_url, service_key)
 
-    if not args.skip_storage_validation:
-        validate_storage_paths(client, bucket, packages)
+    imported_books = []
 
-    if args.dry_run:
-        print("\nDRY RUN PASSED. No database rows were changed.")
-        return
+    print("IMPORTING TO SUPABASE")
+    print("---------------------")
 
-    book_cols = client.sample_columns(
-        "books",
-        [
-            "id",
-            "book_code",
-            "code",
-            "title",
-            "book_title",
-            "level",
-            "level_name",
-            "tafiya_name",
-            "status",
-            "book_type",
-            "cover_image_path",
-        ],
-    )
-    page_cols = client.sample_columns(
-        "book_pages",
-        ["id", "book_id", "page_number", "page_text", "image_path", "length"],
-    )
-    skill_cols = client.sample_columns(
-        "book_skills",
-        [
-            "id",
-            "book_id",
-            "reading_strategy",
-            "comprehension_skill",
-            "phonological_awareness",
-            "grammar_mechanics",
-            "word_work",
-            "text_structure",
-            "about_text",
-            "fp_level",
-            "uk_book_band",
-            "website",
-        ],
-    )
+    for item in prepared_books:
+        book = item["book"]
+        code = book["book_code"]
 
-    book_rows, code_col = build_book_rows(packages, book_cols, args.status)
-    client.upsert("books", book_rows, code_col)
-    print(f"Upserted {len(book_rows)} books.")
+        try:
+            book_id = client.import_book(item)
+            imported_books.append(book)
+            print(f"Imported {code}: {book['title']} ({book_id})")
+        except Exception as exc:
+            print(f"FAILED {code}: {exc}")
 
-    book_ids = fetch_book_ids(client, [p["code"] for p in packages], code_col)
+            if not args.keep_going:
+                print("Stopping because --keep-going was not used.")
+                sys.exit(1)
 
-    client.delete_by_book_ids("book_pages", list(book_ids.values()))
-    page_insert_rows = build_page_rows(packages, page_cols, book_ids)
-    for group in chunked(page_insert_rows, 500):
-        client.insert("book_pages", group)
-    print(f"Replaced {len(page_insert_rows)} book_pages rows.")
+    if imported_books and not args.no_books_json:
+        write_books_json(args.books_json, imported_books)
+        print("")
+        print(f"Updated {args.books_json} with {len(imported_books)} imported books.")
 
-    client.delete_by_book_ids("book_skills", list(book_ids.values()))
-    skill_insert_rows = build_skill_rows(packages, skill_cols, book_ids)
-    for group in chunked(skill_insert_rows, 500):
-        client.insert("book_skills", group)
-    print(f"Replaced {len(skill_insert_rows)} book_skills rows.")
-
-    update_books_json(args.books_json, packages)
-
-    print("\nDONE. Imported target batch to 10 books.")
+    print("")
+    print(f"Done. Imported {len(imported_books)} safe books.")
 
 
 if __name__ == "__main__":
