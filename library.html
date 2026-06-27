@@ -70,6 +70,10 @@
       font-weight: 700;
     }
 
+    .home-link:hover {
+      border-color: #bbbbbb;
+    }
+
     .status {
       background: #fff;
       border: 1px solid var(--line);
@@ -139,6 +143,7 @@
     .book-code {
       display: inline-flex;
       align-items: center;
+      width: fit-content;
       border-radius: 999px;
       background: #eef7f2;
       color: #22734f;
@@ -163,12 +168,80 @@
     }
 
     @media (max-width: 640px) {
+      .page {
+        padding: 22px 14px 36px;
+      }
+
       .top {
         flex-direction: column;
+        gap: 14px;
+        margin-bottom: 20px;
       }
 
       .home-link {
         align-self: flex-start;
+        padding: 8px 14px;
+        font-size: 0.95rem;
+      }
+
+      .subtitle {
+        font-size: 0.98rem;
+      }
+
+      .book-count {
+        margin-bottom: 12px;
+      }
+
+      .book-list {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .book-card {
+        display: grid;
+        grid-template-columns: 82px 1fr;
+        grid-template-rows: auto auto auto;
+        column-gap: 12px;
+        align-items: center;
+        min-height: 0;
+        padding: 10px;
+        border-radius: 16px;
+      }
+
+      .book-card:hover {
+        transform: none;
+      }
+
+      .thumb-wrap {
+        grid-column: 1;
+        grid-row: 1 / span 3;
+        width: 82px;
+        aspect-ratio: 148 / 210;
+        margin-bottom: 0;
+        border-radius: 12px;
+      }
+
+      .book-code {
+        grid-column: 2;
+        grid-row: 1;
+        font-size: 0.68rem;
+        padding: 4px 8px;
+        margin-bottom: 6px;
+      }
+
+      .book-title {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: 1rem;
+        line-height: 1.15;
+        margin-bottom: 5px;
+      }
+
+      .book-meta {
+        grid-column: 2;
+        grid-row: 3;
+        font-size: 0.82rem;
+        line-height: 1.25;
       }
     }
   </style>
